@@ -1,5 +1,4 @@
-
-import { Project, BlogPost, Domain, Testimonial, Partner, TeamMember } from './types';
+import { Project, BlogPost, Domain, Testimonial, Partner } from './types';
 
 export const CONTACT_INFO = {
   phone: "+243 999 000 000",
@@ -11,32 +10,32 @@ export const CONTACT_INFO = {
 export const DOMAINS: Domain[] = [
   { 
     id: 'health', 
-    title: '', // Loaded via translation
-    description: '', // Loaded via translation
+    title: 'Santé & Bien-être', 
+    description: 'Fournir des soins essentiels et renforcer la résilience des communautés.', 
     icon: 'Heart' 
   },
   { 
     id: 'education', 
-    title: '', 
-    description: '', 
+    title: 'Éducation', 
+    description: 'Soutenir l’apprentissage, l’accès scolaire et l’émancipation intellectuelle.', 
     icon: 'BookOpen' 
   },
   { 
-    id: 'socio_eco', 
-    title: '', 
-    description: '', 
+    id: 'socio-eco', 
+    title: 'Dév. Socio-économique', 
+    description: 'Encourager l’autonomie et la dignité à long terme.', 
     icon: 'HandCoins' 
   },
   { 
     id: 'food', 
-    title: '', 
-    description: '', 
+    title: 'Sécurité Alimentaire', 
+    description: 'Garantir un accès durable à une alimentation saine.', 
     icon: 'Wheat' 
   },
   { 
     id: 'culture', 
-    title: '', 
-    description: '', 
+    title: 'Culture & Art', 
+    description: 'Promouvoir l’expression créative et l’identité locale.', 
     icon: 'Palette' 
   },
 ];
@@ -164,36 +163,5 @@ export const PARTNERS: Partner[] = [
     logo: 'https://placehold.co/300x150/16a34a/ffffff?text=Banque',
     description: "Mécénat d'entreprise soutenant nos initiatives de micro-crédit.",
     type: 'Corporate'
-  }
-];
-
-export const TEAM_MEMBERS: TeamMember[] = [
-  {
-    id: '1',
-    name: 'Dr. Jean Amani',
-    role: 'Directeur Exécutif',
-    bio: 'Médecin de santé publique avec 15 ans d\'expérience dans l\'humanitaire en RDC.',
-    image: 'https://picsum.photos/seed/team1/300/300'
-  },
-  {
-    id: '2',
-    name: 'Sarah Kabuya',
-    role: 'Responsable Programmes',
-    bio: 'Experte en développement communautaire et gestion de projets éducatifs.',
-    image: 'https://picsum.photos/seed/team2/300/300'
-  },
-  {
-    id: '3',
-    name: 'Michel Kasongo',
-    role: 'Coordinateur Logistique',
-    bio: 'Spécialiste de la chaîne d\'approvisionnement en zones difficiles d\'accès.',
-    image: 'https://picsum.photos/seed/team3/300/300'
-  },
-  {
-    id: '4',
-    name: 'Aline Mwamba',
-    role: 'Responsable Partenariats',
-    bio: 'Passionnée par la mobilisation de ressources et le plaidoyer international.',
-    image: 'https://picsum.photos/seed/team4/300/300'
   }
 ];

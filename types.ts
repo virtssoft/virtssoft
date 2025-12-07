@@ -34,3 +34,19 @@ export interface Testimonial {
   content: string;
   image: string;
 }
+
+export interface Partner {
+  id: string;
+  name: string;
+  logo: string;
+  description: string;
+  type: 'Corporate' | 'NGO' | 'Volunteer' | 'Government';
+}
+
+export interface TeamMember {
+  id: string;
+  name: string;
+  role: string;
+  bio: string;
+  image: string;
+}

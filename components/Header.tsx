@@ -1,62 +1,60 @@
+
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Phone, Mail, ChevronDown, Menu, X, Facebook, Twitter, Linkedin, Search, Globe } from 'lucide-react';
+import { Phone, Mail, ChevronDown, Menu, X, Facebook, Twitter, Linkedin, Search, User } from 'lucide-react';
 import { CONTACT_INFO } from '../constants';
+import { useLanguage } from '../context/LanguageContext';
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [language, setLanguage] = useState('FR');
   const location = useLocation();
   const navigate = useNavigate();
+  const { language, setLanguage, t } = useLanguage();
 
   const isActive = (path: string) => location.pathname === path;
 
+  // Combined Menu Order based on new specification
   const navLinks = [
-    { name: 'Accueil', path: '/' },
-    { name: 'À propos', path: '/about' },
-    { name: 'Domaines', path: '/domains' },
-    { name: 'Projets', path: '/projects' },
-    { name: 'Témoignages', path: '/testimonials' },
-    { name: 'Blog', path: '/blog' },
-    { name: 'Partenaires', path: '/partners' },
-    { name: 'Contact', path: '/contact' },
+    { name: t('nav.home'), path: '/' },
+    { name: t('nav.about'), path: '/about' }, // About + Domains
+    { name: t('nav.projects'), path: '/projects' }, // Projects + Testimonials
+    { name: t('nav.blog'), path: '/blog' }, // Blog + Partners + Contact
+    { name: t('nav.account'), path: '/account', icon: <User size={16} className="inline-block mr-1" /> },
   ];
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    navigate('/search');
-  };
-
   return (
-    <header className="w-full shadow-md z-50 relative">
-      {/* 🟦 TOPBAR */}
+    <header className="w-full shadow-sm z-50 relative font-sans sticky top-0">
+      {/* 🟦 TOPBAR - Minimalist White */}
       <div className="bg-white border-b border-gray-100 py-2 hidden md:block">
-        <div className="container mx-auto px-4 md:px-6 flex justify-between items-center text-xs text-gray-600 font-medium">
+        <div className="container mx-auto px-4 md:px-6 flex justify-between items-center text-xs text-gray-500 font-medium">
           <div className="flex items-center space-x-6">
-            <a href={`tel:${CONTACT_INFO.phone}`} className="flex items-center hover:text-comfort-blue transition-colors">
-              <Phone size={14} className="mr-2" />
-              {CONTACT_INFO.phone}
-            </a>
             <a href={`mailto:${CONTACT_INFO.email}`} className="flex items-center hover:text-comfort-blue transition-colors">
               <Mail size={14} className="mr-2" />
               {CONTACT_INFO.email}
             </a>
+            <a href={`tel:${CONTACT_INFO.phone}`} className="flex items-center hover:text-comfort-blue transition-colors">
+              <Phone size={14} className="mr-2" />
+              {CONTACT_INFO.phone}
+            </a>
           </div>
           <div className="flex items-center space-x-6">
-            <div className="flex space-x-3">
-              <a href="#" className="hover:text-comfort-blue"><Facebook size={14} /></a>
-              <a href="#" className="hover:text-comfort-blue"><Twitter size={14} /></a>
-              <a href="#" className="hover:text-comfort-blue"><Linkedin size={14} /></a>
+            {/* Social Icons - Monochrome Blue */}
+            <div className="flex space-x-4">
+              <a href="#" className="text-comfort-blue hover:opacity-80 transition-opacity"><Facebook size={14} /></a>
+              <a href="#" className="text-comfort-blue hover:opacity-80 transition-opacity"><Twitter size={14} /></a>
+              <a href="#" className="text-comfort-blue hover:opacity-80 transition-opacity"><Linkedin size={14} /></a>
             </div>
-            <div className="relative group cursor-pointer flex items-center">
-              <span>{language}</span>
+            
+            {/* Language Selector */}
+            <div className="relative group cursor-pointer flex items-center border-l border-gray-200 pl-4">
+              <span className="hover:text-comfort-blue transition-colors">{language}</span>
               <ChevronDown size={12} className="ml-1" />
-              <div className="absolute top-full right-0 mt-1 bg-white border shadow-lg rounded hidden group-hover:block z-50 w-16">
+              <div className="absolute top-full right-0 mt-1 bg-white border border-gray-100 shadow-lg rounded hidden group-hover:block z-50 w-20">
                 {['FR', 'EN', 'SW'].map((lang) => (
                   <button 
                     key={lang} 
-                    onClick={() => setLanguage(lang)}
-                    className="block w-full text-left px-3 py-1 hover:bg-gray-100"
+                    onClick={() => setLanguage(lang as any)}
+                    className="block w-full text-left px-4 py-2 hover:bg-gray-50 text-gray-700"
                   >
                     {lang}
                   </button>
@@ -67,59 +65,59 @@ const Header: React.FC = () => {
         </div>
       </div>
 
-      {/* 🟩 MAIN HEADER */}
-      <div className="bg-white py-4 md:py-5">
+      {/* 🟩 MAIN HEADER - "Foundation" Style */}
+      <div className="bg-white py-4 lg:py-6 shadow-md">
         <div className="container mx-auto px-4 md:px-6 flex justify-between items-center">
           {/* LOGO */}
           <Link to="/" className="flex items-center space-x-3 z-50 group">
-            <div className="text-comfort-blue group-hover:scale-110 transition-transform">
-              <Globe size={40} strokeWidth={1.5} />
-            </div>
+            <img 
+              src="https://placehold.co/120x120/01217d/ffffff/png?text=Logo" 
+              alt="COMFORT Asbl Logo" 
+              className="h-14 w-auto object-contain" 
+            />
             <div className="flex flex-col">
-              <span className="text-comfort-blue font-bold text-2xl font-serif tracking-tight leading-none flex items-center">
-                COMFORT <span className="text-sm font-sans font-normal ml-2 text-gray-500 uppercase tracking-widest">Asbl</span>
+              <span className="text-comfort-blue font-serif font-bold text-2xl md:text-3xl tracking-tight leading-none">
+                COMFORT <span className="text-sm font-sans font-normal ml-1 text-gray-500 uppercase tracking-widest align-middle">Asbl</span>
               </span>
-              <span className="text-xs text-gray-400 font-medium tracking-wide">Shield, aid, train and inform.</span>
+              <span className="text-[10px] text-gray-400 font-medium tracking-widest uppercase mt-1">Shield, aid, train and inform.</span>
             </div>
           </Link>
 
           {/* DESKTOP NAV */}
-          <nav className="hidden lg:flex items-center space-x-6">
+          <nav className="hidden xl:flex items-center space-x-8">
             {navLinks.map((link) => (
               <Link 
                 key={link.path} 
                 to={link.path} 
-                className={`text-sm font-medium transition-all duration-200 border-b-2 ${
-                  isActive(link.path) 
-                    ? 'text-comfort-blue border-comfort-blue' 
-                    : 'text-comfort-blue border-transparent hover:border-gray-200'
+                className={`text-sm font-medium tracking-wide transition-all duration-300 relative group flex items-center ${
+                  isActive(link.path) ? 'text-comfort-blue' : 'text-comfort-blue/80 hover:text-comfort-blue'
                 }`}
               >
+                {link.icon && link.icon}
                 {link.name}
+                <span className={`absolute -bottom-1 left-0 w-0 h-0.5 bg-comfort-blue transition-all duration-300 group-hover:w-full ${isActive(link.path) ? 'w-full' : ''}`}></span>
               </Link>
             ))}
-             <button 
-               onClick={() => navigate('/search')}
-               className="text-comfort-blue hover:scale-110 transition-transform"
-             >
-                <Search size={18} />
-             </button>
+            
             <Link 
               to="/donate" 
-              className="bg-comfort-blue text-white px-5 py-2.5 rounded text-sm font-semibold hover:bg-blue-900 transition-colors shadow-sm"
+              className="bg-comfort-blue text-white px-6 py-3 rounded-sm text-sm font-bold hover:bg-[#001860] transition-colors shadow-sm tracking-wide uppercase"
             >
-              Faire un Don
+              {t('nav.donate')}
             </Link>
           </nav>
 
           {/* MOBILE TOGGLE */}
-          <div className="lg:hidden flex items-center z-50 space-x-4">
-             {/* Mobile Language included in toggler area or inside menu */}
+          <div className="xl:hidden flex items-center z-50 space-x-4">
+             {/* Mobile language toggle */}
+             <button onClick={() => setLanguage(language === 'FR' ? 'EN' : language === 'EN' ? 'SW' : 'FR')} className="text-xs font-bold text-comfort-blue border border-comfort-blue rounded px-2 py-1">
+                {language}
+             </button>
             <button 
               onClick={() => setIsMenuOpen(!isMenuOpen)} 
-              className="text-comfort-blue focus:outline-none"
+              className="text-comfort-blue p-2 focus:outline-none"
             >
-              {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
+              {isMenuOpen ? <X size={32} strokeWidth={1.5} /> : <Menu size={32} strokeWidth={1.5} />}
             </button>
           </div>
         </div>
@@ -127,14 +125,14 @@ const Header: React.FC = () => {
 
       {/* 🟧 MOBILE MENU OVERLAY */}
       {isMenuOpen && (
-        <div className="fixed inset-0 bg-white z-40 lg:hidden flex flex-col pt-24 px-6 overflow-y-auto">
-          <div className="flex flex-col space-y-4 text-center">
+        <div className="fixed inset-0 bg-white z-40 xl:hidden flex flex-col pt-32 px-6 overflow-y-auto animate-in slide-in-from-right duration-300">
+          <div className="flex flex-col space-y-6 text-center">
              <Link 
               to="/donate" 
               onClick={() => setIsMenuOpen(false)}
-              className="bg-comfort-blue text-white px-6 py-3 rounded text-lg font-semibold w-full shadow-md mb-4"
+              className="bg-comfort-blue text-white px-6 py-4 rounded-sm text-lg font-bold w-full shadow-lg uppercase tracking-wide mb-6"
             >
-              Faire un Don
+              {t('nav.donate')}
             </Link>
             
             {navLinks.map((link) => (
@@ -142,29 +140,25 @@ const Header: React.FC = () => {
                 key={link.path} 
                 to={link.path} 
                 onClick={() => setIsMenuOpen(false)}
-                className={`text-lg font-medium py-2 border-b border-gray-100 ${
-                  isActive(link.path) ? 'text-comfort-blue' : 'text-gray-600'
+                className={`text-xl font-serif font-medium py-3 border-b border-gray-50 flex items-center justify-center ${
+                  isActive(link.path) ? 'text-comfort-blue' : 'text-gray-800'
                 }`}
               >
+                 {link.icon && <span className="mr-2">{link.icon}</span>}
                 {link.name}
               </Link>
             ))}
             
-            <div className="pt-6 flex justify-center space-x-4 border-t border-gray-100 mt-4">
+            <div className="pt-8 flex justify-center space-x-4 mt-auto pb-12">
                {['FR', 'EN', 'SW'].map((lang) => (
                   <button 
                     key={lang} 
-                    onClick={() => setLanguage(lang)}
-                    className={`px-3 py-1 rounded border ${language === lang ? 'bg-comfort-blue text-white' : 'bg-gray-50 text-gray-600'}`}
+                    onClick={() => setLanguage(lang as any)}
+                    className={`px-4 py-2 rounded border ${language === lang ? 'bg-comfort-blue text-white border-comfort-blue' : 'bg-transparent text-gray-500 border-gray-200'}`}
                   >
                     {lang}
                   </button>
                 ))}
-            </div>
-            
-            <div className="py-6 text-sm text-gray-500">
-               <p>{CONTACT_INFO.email}</p>
-               <p>{CONTACT_INFO.phone}</p>
             </div>
           </div>
         </div>

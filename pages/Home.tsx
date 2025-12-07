@@ -1,15 +1,46 @@
-import React from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Activity, Users, Globe } from 'lucide-react';
-import { PROJECTS, DOMAINS } from '../constants';
+import { ArrowRight, Heart, BookOpen, HandCoins, Wheat, Palette, MapPin, Mail, Phone, Clock, ChevronLeft, ChevronRight, Eye, Handshake, Info, Calendar, User } from 'lucide-react';
+import { PROJECTS, DOMAINS, TESTIMONIALS, CONTACT_INFO, BLOG_POSTS, PARTNERS } from '../constants';
+import { useLanguage } from '../context/LanguageContext';
 
 const Home: React.FC = () => {
-  const featuredProject = PROJECTS[0];
+  const { t } = useLanguage();
+  // Simple state for Testimonial Slider
+  const [currentTestimonial, setCurrentTestimonial] = useState(0);
+
+  const nextTestimonial = () => {
+    setCurrentTestimonial((prev) => (prev + 1) % TESTIMONIALS.length);
+  };
+
+  const prevTestimonial = () => {
+    setCurrentTestimonial((prev) => (prev - 1 + TESTIMONIALS.length) % TESTIMONIALS.length);
+  };
+
+  // Auto-advance testimonials
+  useEffect(() => {
+    const timer = setInterval(nextTestimonial, 6000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Icon mapping helper
+  const getIcon = (iconName: string, size = 24, className = "") => {
+    switch (iconName) {
+      case 'Heart': return <Heart size={size} className={className} />;
+      case 'BookOpen': return <BookOpen size={size} className={className} />;
+      case 'HandCoins': return <HandCoins size={size} className={className} />;
+      case 'Wheat': return <Wheat size={size} className={className} />;
+      case 'Palette': return <Palette size={size} className={className} />;
+      default: return <Heart size={size} className={className} />;
+    }
+  };
 
   return (
-    <div className="flex flex-col min-h-screen">
-      {/* HERO SECTION - BACKGROUND VIDEO */}
-      <section className="relative h-[600px] md:h-[700px] flex items-center overflow-hidden">
+    <div className="flex flex-col min-h-screen font-sans">
+      
+      {/* 🟦 1. SECTION HERO - Le cœur émotionnel */}
+      <section className="relative h-[650px] md:h-[800px] flex items-center overflow-hidden">
         {/* Background Video */}
         <video 
           className="absolute inset-0 w-full h-full object-cover"
@@ -20,110 +51,443 @@ const Home: React.FC = () => {
           poster="https://picsum.photos/seed/hope/1920/1080"
         >
           <source src="https://assets.mixkit.co/videos/preview/mixkit-children-playing-with-a-kite-on-a-hill-4444-large.mp4" type="video/mp4" />
-          {/* Fallback for legacy browsers */}
-          <img src="https://picsum.photos/seed/hope/1920/1080" alt="Hope and Impact" className="w-full h-full object-cover" />
+          <img src="https://picsum.photos/seed/hope/1920/1080" alt="Hope and Impact" className="w-full h-full object-cover grayscale" />
         </video>
 
-        {/* Overlay for text readability - Brand Blue Tint */}
-        <div className="absolute inset-0 bg-comfort-blue/60 mix-blend-multiply z-0"></div>
-        <div className="absolute inset-0 bg-black/30 z-0"></div>
+        {/* Filters for readability & mood */}
+        <div className="absolute inset-0 bg-black/40 z-0"></div>
+        {/* Slight blue tint gradient */}
+        <div className="absolute inset-0 bg-gradient-to-r from-comfort-blue/50 to-transparent mix-blend-multiply z-0"></div>
 
-        {/* Hero Content */}
-        <div className="container relative z-10 mx-auto px-4 md:px-6">
-          <div className="max-w-3xl">
-            <div className="inline-block bg-white/20 backdrop-blur-md border border-white/30 rounded-full px-4 py-1 text-white text-xs font-bold tracking-widest uppercase mb-6">
-              Shield, Aid, Train and Inform
-            </div>
-            <h1 className="text-4xl md:text-6xl font-serif font-bold text-white leading-tight mb-6 drop-shadow-md">
-              Protéger et bâtir l'avenir ensemble.
+        <div className="container relative z-10 mx-auto px-4 md:px-6 flex justify-center text-center">
+          <div className="max-w-4xl animate-in fade-in zoom-in duration-1000">
+            <span className="inline-block bg-comfort-blue/90 text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-6 border border-white/20">
+              {t('hero.badge')}
+            </span>
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif font-bold text-white leading-tight mb-8 drop-shadow-lg">
+              {t('hero.title')}
             </h1>
-            <p className="text-lg md:text-xl text-blue-50 mb-8 leading-relaxed drop-shadow max-w-2xl">
-              COMFORT Asbl s'engage à réduire les inégalités en RDC à travers la santé, l'éducation et l'autonomisation des communautés.
+            <p className="text-lg md:text-2xl text-gray-100 mb-10 font-light max-w-2xl mx-auto drop-shadow-md">
+              {t('hero.subtitle')}
             </p>
-            <div className="flex flex-wrap gap-4">
-               <Link to="/about" className="bg-white text-comfort-blue px-6 py-3 rounded font-semibold hover:bg-gray-100 transition-colors shadow-lg">
-                 Notre Mission
+            
+            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+               <Link 
+                to="/projects" 
+                className="bg-comfort-blue text-white border-2 border-comfort-blue px-8 py-4 rounded-sm font-bold tracking-wide uppercase hover:bg-[#001860] hover:border-[#001860] transition-colors min-w-[200px]"
+               >
+                 {t('hero.discover')}
                </Link>
-               <Link to="/donate" className="bg-comfort-blue border-2 border-white/20 text-white px-6 py-3 rounded font-semibold hover:bg-white hover:text-comfort-blue transition-colors shadow-lg flex items-center backdrop-blur-sm">
-                 Agir Maintenant <ArrowRight size={18} className="ml-2" />
+               <Link 
+                to="/donate" 
+                className="bg-white text-comfort-blue border-2 border-white px-8 py-4 rounded-sm font-bold tracking-wide uppercase hover:bg-transparent hover:text-white transition-colors min-w-[200px]"
+               >
+                 {t('hero.donate')}
                </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* STATS STRIP */}
-      <section className="bg-comfort-blue text-white py-12 border-t border-white/10">
-        <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-           <div className="p-4">
-              <Activity size={40} className="mx-auto mb-4 opacity-80" />
-              <h3 className="text-4xl font-bold mb-2">50+</h3>
-              <p className="text-blue-200">Projets Réalisés</p>
-           </div>
-           <div className="p-4">
-              <Users size={40} className="mx-auto mb-4 opacity-80" />
-              <h3 className="text-4xl font-bold mb-2">12k</h3>
-              <p className="text-blue-200">Bénéficiaires Directs</p>
-           </div>
-           <div className="p-4">
-              <Globe size={40} className="mx-auto mb-4 opacity-80" />
-              <h3 className="text-4xl font-bold mb-2">4</h3>
-              <p className="text-blue-200">Provinces Couvertes</p>
-           </div>
+      {/* 🟦 2. SECTION - QUI SOMMES-NOUS ? (NEW) */}
+      <section className="py-20 md:py-32 bg-white">
+        <div className="container mx-auto px-4 md:px-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div className="animate-in slide-in-from-bottom duration-700">
+                    <p className="text-comfort-blue font-bold uppercase mb-2 tracking-widest text-sm">{t('about_section.tag')}</p>
+                    <h2 className="text-4xl md:text-5xl font-serif font-extrabold mb-8 leading-tight text-gray-900">
+                        {t('about_section.title')}
+                    </h2>
+                    <div className="space-y-8 text-gray-700 mb-10">
+                        <div className="flex items-start group">
+                            <div className="bg-blue-50 p-3 rounded-full mr-4 group-hover:bg-comfort-blue transition-colors duration-300">
+                                <Eye className="text-comfort-blue group-hover:text-white transition-colors" size={24} />
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-lg text-gray-900 mb-1">{t('about_section.vision_title')}</h4>
+                                <p className="leading-relaxed text-gray-600">{t('about_section.vision_text')}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-start group">
+                            <div className="bg-blue-50 p-3 rounded-full mr-4 group-hover:bg-comfort-blue transition-colors duration-300">
+                                <Handshake className="text-comfort-blue group-hover:text-white transition-colors" size={24} />
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-lg text-gray-900 mb-1">{t('about_section.mission_title')}</h4>
+                                <p className="leading-relaxed text-gray-600">{t('about_section.mission_text')}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <Link to="/about" className="inline-flex items-center px-8 py-4 rounded-full font-bold uppercase tracking-wide bg-gray-900 text-white hover:bg-comfort-blue transition-all duration-300 shadow-lg hover:scale-105">
+                        <Info className="mr-2" size={20} />
+                        {t('about_section.button')}
+                    </Link>
+                </div>
+                <div className="animate-in slide-in-from-bottom duration-700 delay-200">
+                    <div className="relative">
+                        <div className="absolute -inset-4 bg-comfort-blue/10 rounded-3xl transform rotate-2"></div>
+                        <img 
+                            src="https://picsum.photos/seed/teamwork/800/600" 
+                            alt="Communauté et entraide" 
+                            className="rounded-3xl shadow-2xl w-full object-cover h-auto lg:h-[500px] relative z-10"
+                            loading="lazy"
+                        />
+                    </div>
+                </div>
+            </div>
         </div>
       </section>
 
-      {/* DOMAINS PREVIEW */}
-      <section className="py-20 bg-white">
+      {/* 🟧 3. SECTION - Nos Domaines d’Intervention */}
+      <section className="py-20 md:py-24 bg-gray-50">
         <div className="container mx-auto px-4 md:px-6">
-          <div className="flex justify-between items-end mb-12">
-             <h2 className="text-3xl font-serif font-bold text-gray-900">Nos Domaines d'Intervention</h2>
-             <Link to="/domains" className="text-comfort-blue font-medium hover:underline hidden md:block">Voir tout</Link>
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-serif font-bold text-comfort-blue mb-4">{t('domains.title')}</h2>
+            <p className="text-gray-500 uppercase tracking-widest text-sm font-medium">{t('domains.subtitle')}</p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-             {DOMAINS.map(d => (
-               <Link to="/domains" key={d.id} className="group p-6 border border-gray-100 rounded-lg hover:shadow-xl transition-shadow bg-gray-50 hover:bg-white">
-                  <div className="h-12 w-12 bg-blue-100 text-comfort-blue rounded-full flex items-center justify-center mb-4 group-hover:bg-comfort-blue group-hover:text-white transition-colors">
-                     <Activity size={24} /> 
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
+             {DOMAINS.map((domain, idx) => (
+               <Link 
+                to="/domains" 
+                key={domain.id} 
+                className="group flex flex-col items-center text-center p-6 bg-white rounded-lg shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-2"
+               >
+                  <div className="h-20 w-20 rounded-full bg-gray-50 flex items-center justify-center mb-6 text-gray-400 group-hover:bg-comfort-blue group-hover:text-white transition-colors shadow-sm">
+                     {getIcon(domain.icon, 32)}
                   </div>
-                  <h3 className="text-xl font-bold mb-2 text-gray-800">{d.title}</h3>
-                  <p className="text-gray-600 text-sm leading-relaxed">{d.description}</p>
+                  <h3 className="text-lg font-bold text-gray-900 mb-3 group-hover:text-comfort-blue transition-colors">{t(`domains.${domain.id}.title`)}</h3>
+                  <p className="text-sm text-gray-500 leading-relaxed">
+                    {t(`domains.${domain.id}.desc`)}
+                  </p>
                </Link>
              ))}
           </div>
         </div>
       </section>
 
-      {/* FEATURED PROJECT */}
+      {/* 4. SECTION - Objectifs (Simplified since Vision/Mission is now above) */}
+      <section className="py-20 bg-white border-b border-gray-100">
+        <div className="container mx-auto px-4 md:px-6">
+             <div className="max-w-4xl mx-auto text-center">
+                 <h3 className="text-2xl font-serif font-bold text-gray-900 mb-8">Nos Objectifs Stratégiques</h3>
+                 <div className="grid md:grid-cols-2 gap-6 text-left">
+                    <div className="bg-gray-50 p-6 rounded border-l-4 border-comfort-blue">
+                        <p className="font-medium text-gray-700 flex items-center"><span className="text-comfort-blue text-xl mr-3">•</span> Protection et assistance humanitaire d'urgence</p>
+                    </div>
+                    <div className="bg-gray-50 p-6 rounded border-l-4 border-comfort-blue">
+                        <p className="font-medium text-gray-700 flex items-center"><span className="text-comfort-blue text-xl mr-3">•</span> Offre de soins médicaux en situation de crise</p>
+                    </div>
+                    <div className="bg-gray-50 p-6 rounded border-l-4 border-comfort-blue">
+                        <p className="font-medium text-gray-700 flex items-center"><span className="text-comfort-blue text-xl mr-3">•</span> Renforcement économique et autonomisation</p>
+                    </div>
+                    <div className="bg-gray-50 p-6 rounded border-l-4 border-comfort-blue">
+                        <p className="font-medium text-gray-700 flex items-center"><span className="text-comfort-blue text-xl mr-3">•</span> Promotion de l'inclusivité et de la dignité</p>
+                    </div>
+                 </div>
+             </div>
+        </div>
+      </section>
+
+      {/* 🟫 5. SECTION - Nos Projets */}
+      <section className="py-20 md:py-24 bg-white">
+        <div className="container mx-auto px-4 md:px-6">
+           <div className="flex flex-col md:flex-row justify-between items-end mb-16">
+              <div className="max-w-2xl">
+                <h2 className="text-3xl md:text-4xl font-serif font-bold text-comfort-blue mb-4">{t('projects.title')}</h2>
+                <p className="text-gray-500 text-lg">{t('projects.subtitle')}</p>
+              </div>
+              <Link to="/projects" className="hidden md:flex items-center text-comfort-blue font-bold tracking-wide uppercase hover:underline mt-4 md:mt-0">
+                {t('projects.view_all')} <ArrowRight size={18} className="ml-2"/>
+              </Link>
+           </div>
+
+           <div className="grid md:grid-cols-3 gap-8">
+              {PROJECTS.map((project) => (
+                <div key={project.id} className="group cursor-pointer">
+                   <div className="overflow-hidden rounded-xl mb-6 relative">
+                      <img 
+                        src={project.image} 
+                        alt={project.title} 
+                        className="w-full h-64 object-cover transform group-hover:scale-105 transition-transform duration-700" 
+                      />
+                      <div className="absolute inset-0 bg-comfort-blue/0 group-hover:bg-comfort-blue/10 transition-colors"></div>
+                   </div>
+                   <span className="text-comfort-blue text-xs font-bold uppercase tracking-widest mb-2 block">{project.category}</span>
+                   <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-comfort-blue transition-colors">{project.title}</h3>
+                   <p className="text-gray-500 mb-6 line-clamp-3 leading-relaxed">
+                     {project.description}
+                   </p>
+                   <div className="flex items-center justify-between">
+                     <Link to={`/projects/${project.id}`} className="text-comfort-blue font-bold text-sm uppercase flex items-center group-hover:underline">
+                        {t('projects.view_details')} <ArrowRight size={14} className="ml-2" />
+                     </Link>
+                   </div>
+                </div>
+              ))}
+           </div>
+           
+           <div className="mt-12 text-center md:hidden">
+              <Link to="/projects" className="inline-block border border-gray-300 px-6 py-3 rounded text-sm font-bold uppercase text-gray-600">
+                {t('projects.view_all')}
+              </Link>
+           </div>
+        </div>
+      </section>
+
+      {/* 🟧 6. SECTION - Témoignages */}
+      <section className="py-24 bg-comfort-blue text-white relative overflow-hidden">
+        {/* Decorative circle */}
+        <div className="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
+        
+        <div className="container mx-auto px-4 md:px-6 relative z-10">
+           <div className="max-w-4xl mx-auto text-center">
+              <div className="mb-12">
+                 <Heart className="mx-auto mb-6 text-white/80" size={48} />
+                 <h2 className="text-3xl font-serif font-bold mb-2">{t('testimonials.title')}</h2>
+              </div>
+
+              <div className="relative min-h-[300px] flex items-center justify-center">
+                 {/* Slider Content */}
+                 <div className="px-8 md:px-16 animate-in fade-in duration-500 key={currentTestimonial}">
+                    <p className="text-xl md:text-3xl font-serif leading-relaxed italic mb-8 opacity-90">
+                      "{TESTIMONIALS[currentTestimonial].content}"
+                    </p>
+                    <div className="flex flex-col items-center justify-center">
+                       <img 
+                        src={TESTIMONIALS[currentTestimonial].image} 
+                        alt={TESTIMONIALS[currentTestimonial].name} 
+                        className="w-16 h-16 rounded-full border-2 border-white/30 object-cover mb-4"
+                       />
+                       <h4 className="font-bold text-lg">{TESTIMONIALS[currentTestimonial].name}</h4>
+                       <span className="text-sm text-blue-200 uppercase tracking-widest">{TESTIMONIALS[currentTestimonial].role}</span>
+                    </div>
+                 </div>
+
+                 {/* Controls */}
+                 <button onClick={prevTestimonial} className="absolute left-0 top-1/2 -translate-y-1/2 p-2 hover:bg-white/10 rounded-full transition-colors hidden md:block">
+                    <ChevronLeft size={32} />
+                 </button>
+                 <button onClick={nextTestimonial} className="absolute right-0 top-1/2 -translate-y-1/2 p-2 hover:bg-white/10 rounded-full transition-colors hidden md:block">
+                    <ChevronRight size={32} />
+                 </button>
+                 
+                 {/* Dots */}
+                 <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 flex space-x-2">
+                    {TESTIMONIALS.map((_, idx) => (
+                      <button 
+                        key={idx}
+                        onClick={() => setCurrentTestimonial(idx)}
+                        className={`w-2 h-2 rounded-full transition-all ${currentTestimonial === idx ? 'bg-white w-6' : 'bg-white/40'}`}
+                      />
+                    ))}
+                 </div>
+              </div>
+           </div>
+        </div>
+      </section>
+
+      {/* 🟦 7. SECTION - ACTUALITÉS (NEW) */}
       <section className="py-20 bg-gray-50">
-         <div className="container mx-auto px-4 md:px-6">
-            <h2 className="text-3xl font-serif font-bold text-gray-900 mb-12">Projet à la Une</h2>
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden grid md:grid-cols-2">
-               <div className="h-64 md:h-auto relative">
-                  <img src={featuredProject.image} alt={featuredProject.title} className="absolute inset-0 w-full h-full object-cover" />
-               </div>
-               <div className="p-8 md:p-12 flex flex-col justify-center">
-                  <span className="text-comfort-blue font-bold text-sm tracking-widest uppercase mb-2">{featuredProject.category}</span>
-                  <h3 className="text-2xl md:text-3xl font-bold mb-4">{featuredProject.title}</h3>
-                  <p className="text-gray-600 mb-6 leading-relaxed">
-                     {featuredProject.description}
-                  </p>
-                  <div className="mb-6">
-                     <div className="flex justify-between text-sm font-semibold mb-2">
-                        <span>Objectif: ${featuredProject.goal.toLocaleString()}</span>
-                        <span className="text-comfort-blue">${featuredProject.raised.toLocaleString()} collectés</span>
-                     </div>
-                     <div className="w-full bg-gray-200 rounded-full h-2.5">
-                        <div className="bg-comfort-blue h-2.5 rounded-full" style={{width: `${(featuredProject.raised / featuredProject.goal) * 100}%`}}></div>
-                     </div>
-                  </div>
-                  <Link to={`/projects/${featuredProject.id}`} className="inline-block text-center bg-gray-900 text-white py-3 px-6 rounded font-semibold hover:bg-gray-800 transition-colors">
-                     Soutenir ce projet
-                  </Link>
-               </div>
+        <div className="container mx-auto px-4 md:px-6">
+            <div className="flex flex-col md:flex-row justify-between items-end mb-12">
+                <div>
+                    <h2 className="text-3xl font-serif font-bold text-comfort-blue mb-4">{t('news.title')}</h2>
+                    <p className="text-gray-600">{t('news.subtitle')}</p>
+                </div>
+                <Link to="/blog" className="text-comfort-blue font-bold tracking-wide uppercase hover:underline flex items-center mt-4 md:mt-0">
+                    {t('news.all')} <ArrowRight size={16} className="ml-2" />
+                </Link>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {BLOG_POSTS.slice(0, 3).map((post) => (
+                    <div key={post.id} className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group">
+                        <div className="relative h-48 overflow-hidden">
+                            <img src={post.image} alt={post.title} className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" />
+                            <div className="absolute top-4 left-4 bg-white/90 px-3 py-1 rounded text-xs font-bold text-comfort-blue uppercase">
+                                {post.category}
+                            </div>
+                        </div>
+                        <div className="p-6">
+                            <div className="flex items-center text-xs text-gray-500 mb-3 space-x-4">
+                                <span className="flex items-center"><Calendar size={12} className="mr-1"/> {post.date}</span>
+                                <span className="flex items-center"><User size={12} className="mr-1"/> {post.author}</span>
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-3 leading-snug group-hover:text-comfort-blue transition-colors">
+                                <Link to={`/blog/${post.id}`}>{post.title}</Link>
+                            </h3>
+                            <p className="text-gray-600 text-sm mb-4 line-clamp-2">{post.excerpt}</p>
+                            <Link to={`/blog/${post.id}`} className="text-comfort-blue font-bold text-sm uppercase flex items-center hover:underline">
+                                {t('news.read')} <ArrowRight size={14} className="ml-2" />
+                            </Link>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+      </section>
+
+      {/* ⬛ 7.5 SECTION - PARTENAIRES (SCROLLING MARQUEE) */}
+      <section className="py-16 bg-white border-t border-gray-100 overflow-hidden relative group">
+         <div className="container mx-auto px-4 mb-8 text-center">
+             <h3 className="text-lg font-serif font-bold text-gray-400 uppercase tracking-widest">{t('partners.title')}</h3>
+         </div>
+         <div className="w-full relative overflow-hidden">
+            <div className="flex w-max animate-marquee hover:[animation-play-state:paused] items-center">
+              {/* Loop 1 */}
+              <div className="flex shrink-0 items-center justify-around gap-12 md:gap-16 px-4">
+                {PARTNERS.map((partner) => (
+                    <div key={`p1-${partner.id}`} className="w-32 md:w-48 flex items-center justify-center shrink-0">
+                        <img 
+                            src={partner.logo} 
+                            alt={partner.name} 
+                            className="max-h-16 md:max-h-20 w-auto object-contain grayscale hover:grayscale-0 transition-all duration-500 opacity-60 hover:opacity-100 cursor-pointer transform hover:scale-110"
+                        />
+                    </div>
+                ))}
+              </div>
+              {/* Loop 2 (for seamless infinite scroll) */}
+              <div className="flex shrink-0 items-center justify-around gap-12 md:gap-16 px-4">
+                {PARTNERS.map((partner) => (
+                    <div key={`p2-${partner.id}`} className="w-32 md:w-48 flex items-center justify-center shrink-0">
+                        <img 
+                            src={partner.logo} 
+                            alt={partner.name} 
+                            className="max-h-16 md:max-h-20 w-auto object-contain grayscale hover:grayscale-0 transition-all duration-500 opacity-60 hover:opacity-100 cursor-pointer transform hover:scale-110"
+                        />
+                    </div>
+                ))}
+              </div>
             </div>
          </div>
+         {/* Inline style for the keyframe animation to keep file structure simple */}
+         <style>{`
+            @keyframes marquee {
+              0% { transform: translateX(0); }
+              100% { transform: translateX(-50%); }
+            }
+            .animate-marquee {
+              animation: marquee 30s linear infinite;
+            }
+         `}</style>
       </section>
+
+      {/* 🟩 8. SECTION - CTA Premium */}
+      <section className="py-32 relative flex items-center justify-center">
+         <img 
+            src="https://picsum.photos/seed/community/1920/600" 
+            alt="Community" 
+            className="absolute inset-0 w-full h-full object-cover"
+         />
+         <div className="absolute inset-0 bg-comfort-blue/80 mix-blend-multiply"></div>
+         
+         <div className="container relative z-10 mx-auto px-4 text-center text-white">
+            <h2 className="text-4xl md:text-6xl font-serif font-bold mb-8 whitespace-pre-line">{t('cta.title')}</h2>
+            <Link 
+              to="/donate" 
+              className="inline-block bg-white text-comfort-blue px-10 py-5 rounded-sm text-lg font-bold uppercase tracking-widest hover:bg-gray-100 transition-transform hover:scale-105 shadow-2xl"
+            >
+              {t('cta.button')}
+            </Link>
+         </div>
+      </section>
+
+      {/* 🟦 9. SECTION CONTACT - Integrée */}
+      <section className="py-24 bg-white" id="contact-section">
+        <div className="container mx-auto px-4 md:px-6">
+           <div className="grid lg:grid-cols-2 gap-16">
+              
+              {/* Colonne Gauche - Info */}
+              <div>
+                 <h2 className="text-3xl font-serif font-bold text-comfort-blue mb-6">{t('contact.title')}</h2>
+                 <p className="text-gray-600 mb-10 text-lg">
+                   {t('contact.desc')}
+                 </p>
+                 
+                 <div className="space-y-8">
+                    <div className="flex items-start">
+                       <MapPin className="text-comfort-blue mt-1 mr-6" size={28} strokeWidth={1.5} />
+                       <div>
+                          <h4 className="font-bold text-gray-900 uppercase tracking-wide text-sm mb-1">{t('contact.address')}</h4>
+                          <p className="text-gray-600">{CONTACT_INFO.address}</p>
+                       </div>
+                    </div>
+                    
+                    <div className="flex items-start">
+                       <Mail className="text-comfort-blue mt-1 mr-6" size={28} strokeWidth={1.5} />
+                       <div>
+                          <h4 className="font-bold text-gray-900 uppercase tracking-wide text-sm mb-1">{t('contact.email')}</h4>
+                          <p className="text-gray-600">{CONTACT_INFO.email}</p>
+                       </div>
+                    </div>
+
+                    <div className="flex items-start">
+                       <Phone className="text-comfort-blue mt-1 mr-6" size={28} strokeWidth={1.5} />
+                       <div>
+                          <h4 className="font-bold text-gray-900 uppercase tracking-wide text-sm mb-1">{t('contact.phone')}</h4>
+                          <p className="text-gray-600">{CONTACT_INFO.phone}</p>
+                       </div>
+                    </div>
+
+                    <div className="flex items-start">
+                       <Clock className="text-comfort-blue mt-1 mr-6" size={28} strokeWidth={1.5} />
+                       <div>
+                          <h4 className="font-bold text-gray-900 uppercase tracking-wide text-sm mb-1">{t('contact.hours')}</h4>
+                          <p className="text-gray-600">{CONTACT_INFO.hours}</p>
+                       </div>
+                    </div>
+                 </div>
+
+                 {/* Google Maps Placeholder */}
+                 <div className="mt-10 h-64 bg-gray-100 rounded-lg overflow-hidden border border-gray-200 relative">
+                    <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+                       <span className="flex items-center"><MapPin size={18} className="mr-2"/> Google Map Integrated</span>
+                    </div>
+                 </div>
+              </div>
+
+              {/* Colonne Droite - Formulaire */}
+              <div className="bg-gray-50 p-8 md:p-12 rounded-lg border border-gray-100 shadow-sm">
+                 <h3 className="text-xl font-bold mb-8 text-gray-900">{t('contact.form_title')}</h3>
+                 <form className="space-y-6">
+                    <div className="grid md:grid-cols-2 gap-6">
+                       <div>
+                          <label className="block text-xs font-bold uppercase text-gray-500 mb-2">{t('contact.name')}</label>
+                          <input type="text" className="w-full bg-white border border-gray-200 p-3 rounded-sm focus:border-comfort-blue focus:outline-none transition-colors" />
+                       </div>
+                       <div>
+                          <label className="block text-xs font-bold uppercase text-gray-500 mb-2">{t('contact.email')}</label>
+                          <input type="email" className="w-full bg-white border border-gray-200 p-3 rounded-sm focus:border-comfort-blue focus:outline-none transition-colors" />
+                       </div>
+                    </div>
+                    <div>
+                       <label className="block text-xs font-bold uppercase text-gray-500 mb-2">{t('contact.phone')}</label>
+                       <input type="tel" className="w-full bg-white border border-gray-200 p-3 rounded-sm focus:border-comfort-blue focus:outline-none transition-colors" />
+                    </div>
+                    <div>
+                       <label className="block text-xs font-bold uppercase text-gray-500 mb-2">{t('contact.subject')}</label>
+                       <select className="w-full bg-white border border-gray-200 p-3 rounded-sm focus:border-comfort-blue focus:outline-none transition-colors text-gray-600">
+                          <option>Renseignement général</option>
+                          <option>Devenir bénévole</option>
+                          <option>Partenariat</option>
+                          <option>Presse</option>
+                       </select>
+                    </div>
+                    <div>
+                       <label className="block text-xs font-bold uppercase text-gray-500 mb-2">{t('contact.message')}</label>
+                       <textarea rows={5} className="w-full bg-white border border-gray-200 p-3 rounded-sm focus:border-comfort-blue focus:outline-none transition-colors"></textarea>
+                    </div>
+                    <button className="w-full bg-comfort-blue text-white font-bold py-4 rounded-sm uppercase tracking-wider hover:bg-[#001860] transition-colors shadow-lg">
+                       {t('contact.send')}
+                    </button>
+                 </form>
+              </div>
+
+           </div>
+        </div>
+      </section>
+
     </div>
   );
 };
