@@ -9,6 +9,7 @@ import Donate from './pages/Donate';
 import Projects from './pages/Projects';
 import Blog from './pages/Blog'; // Consolidated Page
 import Account from './pages/Account'; // New Page
+import AdminDashboard from './pages/AdminDashboard'; // New Admin Page
 import GenericPage from './pages/GenericPage';
 import { PROJECTS, BLOG_POSTS } from './pages/constants';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
@@ -142,34 +143,39 @@ const SearchResults = () => {
   );
 };
 
+const AppRoutes = () => {
+    // We separate this to allow Header/Footer logic conditional rendering if needed
+    // But currently, the design implies AdminDashboard is a standalone page or has its own layout.
+    // We'll wrap AdminDashboard without Header/Footer or let it handle its own full screen layout.
+    
+    return (
+        <Routes>
+            <Route path="/" element={<><Header /><Home /><Footer /></>} />
+            <Route path="/about" element={<><Header /><About /><Footer /></>} />
+            <Route path="/projects" element={<><Header /><Projects /><Footer /></>} />
+            <Route path="/projects/:id" element={<><Header /><ProjectDetails /><Footer /></>} />
+            <Route path="/blog" element={<><Header /><Blog /><Footer /></>} />
+            <Route path="/blog/:id" element={<><Header /><BlogPostDetails /><Footer /></>} />
+            <Route path="/donate" element={<><Header /><Donate /><Footer /></>} />
+            <Route path="/account" element={<><Header /><Account /><Footer /></>} />
+            
+            {/* Admin Route - No public Header/Footer */}
+            <Route path="/admin" element={<AdminDashboard />} />
+
+            <Route path="/privacy" element={<><Header /><GenericPage title="Politique de confidentialité"><p>Texte légal...</p></GenericPage><Footer /></>} />
+            <Route path="/terms" element={<><Header /><GenericPage title="Conditions d'utilisation"><p>Mentions légales...</p></GenericPage><Footer /></>} />
+            <Route path="/search" element={<><Header /><SearchResults /><Footer /></>} />
+            <Route path="*" element={<><Header /><NotFound /><Footer /></>} />
+        </Routes>
+    )
+}
+
 const App: React.FC = () => {
   return (
     <LanguageProvider>
       <Router>
         <div className="flex flex-col min-h-screen font-sans antialiased text-gray-800">
-          <Header />
-          <main className="flex-grow">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              {/* About includes Domains */}
-              <Route path="/about" element={<About />} />
-              {/* Projects includes Testimonials */}
-              <Route path="/projects" element={<Projects />} />
-              <Route path="/projects/:id" element={<ProjectDetails />} />
-              {/* Blog includes Partners & Contact */}
-              <Route path="/blog" element={<Blog />} />
-              <Route path="/blog/:id" element={<BlogPostDetails />} />
-              
-              <Route path="/donate" element={<Donate />} />
-              <Route path="/account" element={<Account />} />
-              
-              <Route path="/privacy" element={<GenericPage title="Politique de confidentialité"><p>Texte légal...</p></GenericPage>} />
-              <Route path="/terms" element={<GenericPage title="Conditions d'utilisation"><p>Mentions légales...</p></GenericPage>} />
-              <Route path="/search" element={<SearchResults />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </main>
-          <Footer />
+            <AppRoutes />
         </div>
       </Router>
     </LanguageProvider>

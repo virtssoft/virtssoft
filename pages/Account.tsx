@@ -1,24 +1,50 @@
 
 import React, { useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
-import { User, Lock, Mail, ArrowLeft } from 'lucide-react';
+import { User, Lock, Mail, ArrowLeft, Heart, History, Settings, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 type ViewState = 'login' | 'register' | 'forgot';
 
 const Account: React.FC = () => {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const [view, setView] = useState<ViewState>('login');
+  
+  // State for login form
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  
+  // State for Logged In User
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Check for Admin
+    if (email === 'admin@comfort-asbl.com') {
+        // Open admin dashboard in a new window/tab
+        window.open('#/admin', '_blank');
+    } else {
+        // Mock Login for regular user
+        setIsLoggedIn(true);
+    }
+  };
 
   const handleGoogleLogin = () => {
       // API call to Google would go here
       console.log('Logging in with Google');
       alert('Connexion avec Google (Simulation)');
+      // Simulate success for user
+      setIsLoggedIn(true);
   };
 
   const handleOneAccountLogin = () => {
       // API call to Oneaccount would go here
       console.log('Logging in with Oneaccount');
       alert('Connexion avec Oneaccount (Simulation)');
+      // Simulate success for user
+      setIsLoggedIn(true);
   };
 
   const handleResetPassword = (e: React.FormEvent) => {
@@ -28,6 +54,67 @@ const Account: React.FC = () => {
       setView('login');
   };
 
+  const handleLogout = () => {
+      setIsLoggedIn(false);
+      setEmail('');
+      setPassword('');
+  };
+
+  /* --- LOGGED IN USER DASHBOARD --- */
+  if (isLoggedIn) {
+      return (
+          <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 font-sans">
+              <div className="max-w-4xl mx-auto">
+                  <div className="bg-white rounded-lg shadow overflow-hidden">
+                      {/* Header */}
+                      <div className="bg-comfort-blue px-6 py-8 text-white flex justify-between items-center">
+                          <div className="flex items-center">
+                              <div className="bg-white/20 p-4 rounded-full mr-4">
+                                  <User size={40} className="text-white" />
+                              </div>
+                              <div>
+                                  <h1 className="text-2xl font-serif font-bold">{t('account.my_space')}</h1>
+                                  <p className="opacity-80">{email || "Utilisateur"}</p>
+                                  <span className="text-xs bg-white/20 px-2 py-1 rounded mt-2 inline-block uppercase tracking-wider">{t('account.role_user')}</span>
+                              </div>
+                          </div>
+                          <button onClick={handleLogout} className="flex items-center text-sm font-bold bg-white/10 hover:bg-white/20 px-4 py-2 rounded transition-colors">
+                              <LogOut size={16} className="mr-2" /> {t('account.logout')}
+                          </button>
+                      </div>
+
+                      {/* Content Grid */}
+                      <div className="p-8 grid md:grid-cols-2 gap-8">
+                          {/* Donations History */}
+                          <div className="border border-gray-100 rounded-lg p-6 hover:shadow-md transition-shadow">
+                              <div className="flex items-center mb-4 text-comfort-blue">
+                                  <Heart size={24} className="mr-3" />
+                                  <h2 className="text-xl font-bold text-gray-800">{t('account.my_donations')}</h2>
+                              </div>
+                              <p className="text-gray-500 mb-4 text-sm">{t('account.no_donations')}</p>
+                              <button className="text-comfort-blue text-sm font-bold hover:underline">{t('account.make_donation')} →</button>
+                          </div>
+
+                          {/* Profile Settings */}
+                          <div className="border border-gray-100 rounded-lg p-6 hover:shadow-md transition-shadow">
+                              <div className="flex items-center mb-4 text-comfort-blue">
+                                  <Settings size={24} className="mr-3" />
+                                  <h2 className="text-xl font-bold text-gray-800">{t('account.my_info')}</h2>
+                              </div>
+                              <div className="space-y-2 text-sm text-gray-600">
+                                  <p><span className="font-bold">Email:</span> {email || "user@example.com"}</p>
+                                  <p><span className="font-bold">{t('account.member_since')}:</span> 2024</p>
+                              </div>
+                              <button className="mt-4 text-comfort-blue text-sm font-bold hover:underline">{t('account.edit_profile')} →</button>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      );
+  }
+
+  /* --- LOGIN / REGISTER / FORGOT VIEWS --- */
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -38,13 +125,13 @@ const Account: React.FC = () => {
         </div>
         <h2 className="mt-6 text-center text-3xl font-serif font-bold text-gray-900">
           {view === 'login' && t('account.title')}
-          {view === 'register' && t('account.register')}
-          {view === 'forgot' && "Réinitialisation"}
+          {view === 'register' && t('account.register_title')}
+          {view === 'forgot' && t('account.reset_title')}
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
            {view === 'login' && t('account.login_title')}
-           {view === 'register' && "Créez votre compte pour rejoindre la communauté"}
-           {view === 'forgot' && "Entrez votre email pour récupérer votre compte"}
+           {view === 'register' && t('account.register_subtitle')}
+           {view === 'forgot' && t('account.reset_subtitle')}
         </p>
       </div>
 
@@ -53,13 +140,22 @@ const Account: React.FC = () => {
           
           {/* LOGIN VIEW */}
           {view === 'login' && (
-            <form className="space-y-6" action="#" method="POST">
+            <form className="space-y-6" onSubmit={handleLogin}>
                 <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                     {t('account.email_label')}
                 </label>
                 <div className="mt-1 relative">
-                    <input id="email" name="email" type="email" autoComplete="email" required className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-comfort-blue focus:border-comfort-blue sm:text-sm" />
+                    <input 
+                        id="email" 
+                        name="email" 
+                        type="email" 
+                        autoComplete="email" 
+                        required 
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-comfort-blue focus:border-comfort-blue sm:text-sm" 
+                    />
                 </div>
                 </div>
 
@@ -68,7 +164,16 @@ const Account: React.FC = () => {
                     {t('account.password_label')}
                 </label>
                 <div className="mt-1 relative">
-                    <input id="password" name="password" type="password" autoComplete="current-password" required className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-comfort-blue focus:border-comfort-blue sm:text-sm" />
+                    <input 
+                        id="password" 
+                        name="password" 
+                        type="password" 
+                        autoComplete="current-password" 
+                        required 
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-comfort-blue focus:border-comfort-blue sm:text-sm" 
+                    />
                 </div>
                 </div>
 
@@ -99,19 +204,19 @@ const Account: React.FC = () => {
           {view === 'register' && (
              <form className="space-y-6" action="#" method="POST">
                 <div>
-                    <label className="block text-sm font-medium text-gray-700">Nom Complet</label>
+                    <label className="block text-sm font-medium text-gray-700">{t('account.fullname_label')}</label>
                     <div className="mt-1"><input type="text" required className="block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-comfort-blue focus:border-comfort-blue sm:text-sm" /></div>
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-700">Email</label>
+                    <label className="block text-sm font-medium text-gray-700">{t('account.email_label')}</label>
                     <div className="mt-1"><input type="email" required className="block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-comfort-blue focus:border-comfort-blue sm:text-sm" /></div>
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-700">Mot de passe</label>
+                    <label className="block text-sm font-medium text-gray-700">{t('account.password_label')}</label>
                     <div className="mt-1"><input type="password" required className="block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-comfort-blue focus:border-comfort-blue sm:text-sm" /></div>
                 </div>
                 <button type="submit" className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-comfort-blue hover:bg-blue-900 uppercase tracking-wide">
-                    S'inscrire
+                    {t('account.register')}
                 </button>
              </form>
           )}
@@ -120,17 +225,17 @@ const Account: React.FC = () => {
           {view === 'forgot' && (
               <form className="space-y-6" onSubmit={handleResetPassword}>
                   <div className="text-sm text-gray-500 mb-4 text-center">
-                      Entrez votre adresse email et nous vous enverrons un lien pour réinitialiser votre mot de passe.
+                      {t('account.reset_subtitle')}
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Email</label>
+                    <label className="block text-sm font-medium text-gray-700">{t('account.email_label')}</label>
                     <div className="mt-1"><input type="email" required className="block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-comfort-blue focus:border-comfort-blue sm:text-sm" /></div>
                   </div>
                   <button type="submit" className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-comfort-blue hover:bg-blue-900 uppercase tracking-wide">
-                    Réinitialiser le mot de passe
+                    {t('account.reset_button')}
                   </button>
                   <button type="button" onClick={() => setView('login')} className="w-full flex items-center justify-center mt-4 text-sm font-medium text-gray-600 hover:text-comfort-blue">
-                      <ArrowLeft size={16} className="mr-2" /> Retour à la connexion
+                      <ArrowLeft size={16} className="mr-2" /> {t('account.back_login')}
                   </button>
               </form>
           )}
@@ -178,7 +283,7 @@ const Account: React.FC = () => {
                          <p className="text-sm text-gray-600">
                             Déjà un compte ?{' '}
                             <button onClick={() => setView('login')} className="font-medium text-comfort-blue hover:text-blue-900">
-                                Se connecter
+                                {t('account.login_button')}
                             </button>
                         </p>
                     )}
