@@ -143,10 +143,11 @@ export const api = {
       const partners = await fetchData<ApiPartner[]>('partners.php', []);
       if (partners.length === 0) return PARTNERS;
 
-      return partners.map(p => ({
+      return partners.map((p, index) => ({
         id: p.id,
         name: p.nom,
-        logo: getImageUrl(p.logo_url),
+        // Override API logo_url to match the specific file convention requested (partners1.jpg -> partners6.jpg)
+        logo: `${API_BASE_URL}/assets/images/partners/partners${(index % 6) + 1}.jpg`,
         description: p.description,
         type: 'Corporate' // Default type
       }));
