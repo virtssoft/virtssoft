@@ -70,8 +70,9 @@ const Footer: React.FC = () => {
           <div>
              <h3 className="text-xl font-serif font-bold mb-6 text-white pl-4">{t('footer.follow_title')}</h3>
              <div className="flex space-x-4 pl-4 mb-8">
-               <a href="https://www.facebook.com/photo/?fbid=122103347780826664&set=a.122103344876826664" target="_blank" rel="noopener noreferrer" className="bg-gray-800 p-3 rounded-full hover:bg-comfort-blue hover:text-white transition-all text-gray-400"><Facebook size={18} /></a>
-               <a href="https://x.com/AsblComfor44668" target="_blank" rel="noopener noreferrer" className="bg-gray-800 p-3 rounded-full hover:bg-comfort-blue hover:text-white transition-all text-gray-400"><XIcon size={18} /></a>
+               {/* REMOVED TARGET BLANK FROM LINKS BELOW */}
+               <a href="https://www.facebook.com/photo/?fbid=122103347780826664&set=a.122103344876826664" className="bg-gray-800 p-3 rounded-full hover:bg-comfort-blue hover:text-white transition-all text-gray-400"><Facebook size={18} /></a>
+               <a href="https://x.com/AsblComfor44668" className="bg-gray-800 p-3 rounded-full hover:bg-comfort-blue hover:text-white transition-all text-gray-400"><XIcon size={18} /></a>
                <a href="#" className="bg-gray-800 p-3 rounded-full hover:bg-comfort-blue hover:text-white transition-all text-gray-400"><Linkedin size={18} /></a>
                <a href="#" className="bg-gray-800 p-3 rounded-full hover:bg-comfort-blue hover:text-white transition-all text-gray-400"><Instagram size={18} /></a>
              </div>

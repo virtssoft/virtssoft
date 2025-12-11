@@ -49,10 +49,10 @@ const Header: React.FC = () => {
             </a>
           </div>
           <div className="flex items-center space-x-6">
-            {/* Social Icons - Monochrome Blue */}
+            {/* Social Icons - Monochrome Blue - REMOVED TARGET BLANK */}
             <div className="flex space-x-4 items-center">
-              <a href={settings?.socialLinks?.facebook || "#"} target="_blank" rel="noopener noreferrer" className="text-comfort-blue hover:opacity-80 transition-opacity"><Facebook size={14} /></a>
-              <a href={settings?.socialLinks?.twitter || "#"} target="_blank" rel="noopener noreferrer" className="text-comfort-blue hover:opacity-80 transition-opacity"><XIcon size={13} /></a>
+              <a href={settings?.socialLinks?.facebook || "#"} className="text-comfort-blue hover:opacity-80 transition-opacity"><Facebook size={14} /></a>
+              <a href={settings?.socialLinks?.twitter || "#"} className="text-comfort-blue hover:opacity-80 transition-opacity"><XIcon size={13} /></a>
               <a href={settings?.socialLinks?.linkedin || "#"} className="text-comfort-blue hover:opacity-80 transition-opacity"><Linkedin size={14} /></a>
             </div>
             
