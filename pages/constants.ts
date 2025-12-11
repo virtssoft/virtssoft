@@ -126,42 +126,42 @@ export const PARTNERS: Partner[] = [
   {
     id: '1',
     name: 'Fondation Virunga',
-    logo: 'https://placehold.co/300x150/01217d/ffffff?text=Virunga',
+    logo: 'http://localhost/api/assets/images/partners/partner1.jpg',
     description: "Collaboration pour la conservation de l'environnement et le développement durable autour du parc.",
     type: 'NGO'
   },
   {
     id: '2',
     name: 'Ministère de la Santé RDC',
-    logo: 'https://placehold.co/300x150/cecece/000000?text=MinSante',
+    logo: 'http://localhost/api/assets/images/partners/partner2.png',
     description: "Partenariat stratégique pour l'accès aux soins de santé primaire dans les zones reculées.",
     type: 'Government'
   },
   {
     id: '3',
     name: 'Tech for Good Congo',
-    logo: 'https://placehold.co/300x150/e2e8f0/1e293b?text=TechGood',
+    logo: 'http://localhost/api/assets/images/partners/partner3.jpg',
     description: "Soutien technique et logistique pour la digitalisation de nos programmes éducatifs.",
     type: 'Corporate'
   },
   {
     id: '4',
     name: 'Association des Femmes Vaillantes',
-    logo: 'https://placehold.co/300x150/f8fafc/01217d?text=Femmes+V',
+    logo: 'http://localhost/api/assets/images/partners/partner4.png',
     description: "Réseau de bénévoles locaux mobilisés pour l'autonomisation économique des femmes.",
     type: 'Volunteer'
   },
   {
     id: '5',
     name: 'Global Water Aid',
-    logo: 'https://placehold.co/300x150/0ea5e9/ffffff?text=WaterAid',
+    logo: 'http://localhost/api/assets/images/partners/partner5.jpg',
     description: "Financement et expertise technique pour nos projets d'adduction d'eau potable.",
     type: 'NGO'
   },
   {
     id: '6',
     name: 'Banque Locale de Goma',
-    logo: 'https://placehold.co/300x150/16a34a/ffffff?text=Banque',
+    logo: 'http://localhost/api/assets/images/partners/partner6.png',
     description: "Mécénat d'entreprise soutenant nos initiatives de micro-crédit.",
     type: 'Corporate'
   }
