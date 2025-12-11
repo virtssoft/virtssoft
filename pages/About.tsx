@@ -214,32 +214,32 @@ const About: React.FC = () => {
         </div>
       </section>
 
-      {/* 🟧 9. PARTENAIRES (Blue BG) */}
-      <section className="py-16 bg-comfort-blue overflow-hidden">
-         <div className="container mx-auto px-4 mb-10 text-center">
-             <h3 className="text-xl font-serif font-bold text-white uppercase tracking-widest opacity-80">{t('about_page.partners_title')}</h3>
+      {/* 🟧 9. PARTENAIRES (SCROLLING MARQUEE - MATCH HOME) */}
+      <section className="py-16 bg-white border-t border-gray-100 overflow-hidden relative group">
+         <div className="container mx-auto px-4 mb-8 text-center">
+             <h3 className="text-lg font-serif font-bold text-gray-400 uppercase tracking-widest">{t('about_page.partners_title')}</h3>
          </div>
          {partners.length > 0 && (
-         <div className="w-full relative">
+         <div className="w-full relative overflow-hidden">
             <div className="flex w-max animate-marquee hover:[animation-play-state:paused] items-center">
               <div className="flex shrink-0 items-center justify-around gap-12 md:gap-16 px-4">
                 {partners.map((partner) => (
-                    <div key={`ab-p1-${partner.id}`} className="w-32 md:w-48 flex items-center justify-center shrink-0 opacity-60 hover:opacity-100 transition-opacity">
+                    <div key={`ab-p1-${partner.id}`} className="w-32 md:w-48 flex items-center justify-center shrink-0">
                         <img 
                             src={partner.logo} 
                             alt={partner.name} 
-                            className="max-h-16 w-auto object-contain brightness-0 invert"
+                            className="max-h-16 md:max-h-20 w-auto object-contain grayscale hover:grayscale-0 transition-all duration-500 opacity-60 hover:opacity-100 cursor-pointer transform hover:scale-110"
                         />
                     </div>
                 ))}
               </div>
               <div className="flex shrink-0 items-center justify-around gap-12 md:gap-16 px-4">
                 {partners.map((partner) => (
-                    <div key={`ab-p2-${partner.id}`} className="w-32 md:w-48 flex items-center justify-center shrink-0 opacity-60 hover:opacity-100 transition-opacity">
+                    <div key={`ab-p2-${partner.id}`} className="w-32 md:w-48 flex items-center justify-center shrink-0">
                         <img 
                             src={partner.logo} 
                             alt={partner.name} 
-                            className="max-h-16 w-auto object-contain brightness-0 invert"
+                            className="max-h-16 md:max-h-20 w-auto object-contain grayscale hover:grayscale-0 transition-all duration-500 opacity-60 hover:opacity-100 cursor-pointer transform hover:scale-110"
                         />
                     </div>
                 ))}
@@ -353,4 +353,3 @@ const About: React.FC = () => {
 };
 
 export default About;
-    
