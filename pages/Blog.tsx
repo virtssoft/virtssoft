@@ -36,7 +36,7 @@ const Blog: React.FC = () => {
       {/* 🟩 1. BLOG GRID */}
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4 md:px-6">
-            {blogPosts.length > 0 ? (
+            {blogPosts.length > 0 && (
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
                 {blogPosts.map(post => (
                     <div key={post.id} className="bg-white border border-gray-100 rounded-xl overflow-hidden hover:shadow-xl transition-all duration-300 group">
@@ -58,10 +58,6 @@ const Blog: React.FC = () => {
                     </div>
                     </div>
                 ))}
-                </div>
-            ) : (
-                <div className="text-center py-20 bg-gray-50 rounded-lg">
-                    <p className="text-gray-500 text-lg">Aucun article trouvé. Vérifiez la connexion API.</p>
                 </div>
             )}
         </div>
