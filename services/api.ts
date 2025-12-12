@@ -163,21 +163,28 @@ export const api = {
   // POST login.php
   login: async (emailOrUsername: string, password: string): Promise<{ success: boolean; user?: ApiUser; error?: string }> => {
     try {
-      const formData = new FormData();
-      formData.append('username', emailOrUsername); // API might expect 'username' or 'email' field, mapped here
-      formData.append('password', password);
-
+      // FIX: Use JSON body and 'login' key as per PHP backend expectation ($input['login'])
       const response = await fetch(`${API_BASE_URL}/login.php`, {
         method: 'POST',
-        body: formData,
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            login: emailOrUsername, 
+            password: password
+        }),
       });
 
       const data = await response.json();
       
-      // Adaptation: Check if data itself is the user object or if it's wrapped
-      if (data.id || data.user) {
-         const userObj = data.user || data;
-         return { success: true, user: userObj };
+      // Backend returns { "user": ... } on success
+      if (data.user) {
+         return { success: true, user: data.user };
+      }
+      
+      // Handle specific error messages from PHP { "error": "..." }
+      if (data.error) {
+          return { success: false, error: data.error };
       }
       
       return { success: false, error: data.message || 'Identifiants incorrects' };
