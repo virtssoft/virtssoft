@@ -6,16 +6,9 @@ import { useLanguage } from '../context/LanguageContext';
 import { useData } from '../context/DataContext';
 import { ArrowRight, Mail, Phone, MapPin, Clock, Facebook } from 'lucide-react';
 
-type FilterType = 'All' | 'Corporate' | 'NGO' | 'Volunteer' | 'Government';
-
 const Blog: React.FC = () => {
   const { t } = useLanguage();
   const { blogPosts, partners, settings } = useData();
-  const [filter, setFilter] = useState<FilterType>('All');
-
-  const filteredPartners = filter === 'All' 
-    ? partners 
-    : partners.filter(p => p.type === filter);
 
   // Use dynamic settings if available, fallback to constants
   const contactEmail = settings?.contactEmail || CONTACT_INFO.email;
@@ -71,34 +64,9 @@ const Blog: React.FC = () => {
                 <p className="text-lg text-gray-600 leading-relaxed">{t('partners.subtitle')}</p>
             </div>
 
-            {/* Filter Controls */}
-            <div className="flex flex-wrap justify-center gap-4 mb-12">
-            {['All', 'NGO', 'Government', 'Corporate', 'Volunteer'].map((type) => {
-                let label = t('partners.filter_all');
-                if (type === 'NGO') label = t('partners.filter_ngo');
-                if (type === 'Government') label = t('partners.filter_gov');
-                if (type === 'Corporate') label = t('partners.filter_corp');
-                if (type === 'Volunteer') label = t('partners.filter_vol');
-
-                return (
-                <button
-                    key={type}
-                    onClick={() => setFilter(type as FilterType)}
-                    className={`px-6 py-2 rounded-full text-sm font-bold uppercase tracking-wide transition-all ${
-                    filter === type 
-                        ? 'bg-comfort-blue text-white shadow-lg transform scale-105' 
-                        : 'bg-white text-gray-500 border border-gray-200 hover:border-comfort-blue hover:text-comfort-blue'
-                    }`}
-                >
-                    {label}
-                </button>
-                )
-            })}
-            </div>
-
             {/* Partners Grid */}
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-            {filteredPartners.map((partner) => (
+            {partners.map((partner) => (
                 <div key={partner.id} className="bg-white rounded-lg p-8 shadow-sm hover:shadow-xl transition-shadow border border-gray-100 flex flex-col items-center text-center">
                 <div className="h-32 w-full flex items-center justify-center mb-6 p-4 bg-gray-50 rounded-md overflow-hidden">
                     <img 
