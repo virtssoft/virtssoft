@@ -3,12 +3,22 @@ import { Project, BlogPost, Partner, TeamMember, Testimonial, SiteSettings } fro
 import { PROJECTS, BLOG_POSTS, PARTNERS, TEAM_MEMBERS, TESTIMONIALS, CONTACT_INFO } from '../pages/constants';
 
 // --- CONFIGURATION API ---
-// Assurez-vous que votre serveur PHP tourne sur ce port ou ajustez l'URL
 const API_BASE_URL = 'http://localhost/api';
+
+// Détection de l'environnement : Est-ce qu'on est sur un site HTTPS (Vercel) essayant de taper sur du HTTP Local ?
+const isMixedContentRestriction = typeof window !== 'undefined' && 
+                                  window.location.protocol === 'https:' && 
+                                  API_BASE_URL.includes('localhost');
 
 // Helper pour les images
 const getImageUrl = (path: string | undefined) => {
   if (!path) return 'https://placehold.co/600x400?text=No+Image';
+  
+  // Si on est sur Vercel et que l'image pointe sur localhost, on renvoie une image placeholder
+  if (isMixedContentRestriction && path.includes('localhost')) {
+      return `https://placehold.co/600x400?text=Image+Localhost+Non+Visible`;
+  }
+
   if (path.startsWith('http')) return path;
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
   return `${API_BASE_URL}${cleanPath}`;
@@ -16,6 +26,13 @@ const getImageUrl = (path: string | undefined) => {
 
 // Fonction générique pour récupérer les données (Blog, Projets, etc.)
 async function fetchData<T>(endpoint: string, fallback: T): Promise<T> {
+  // 1. Si on est sur Vercel (HTTPS) et API sur Localhost -> On retourne directement le fallback (Mock)
+  // Cela évite l'erreur rouge "Mixed Content" dans la console
+  if (isMixedContentRestriction) {
+      console.warn(`[Mode Démo] Fetch bloqué vers ${endpoint} (HTTPS ne peut pas accéder à HTTP Localhost). Utilisation des données statiques.`);
+      return fallback;
+  }
+
   try {
     const response = await fetch(`${API_BASE_URL}/${endpoint}`);
     if (!response.ok) {
@@ -24,7 +41,6 @@ async function fetchData<T>(endpoint: string, fallback: T): Promise<T> {
     const data = await response.json();
     return data;
   } catch (error) {
-    // En cas d'erreur (serveur éteint), on retourne les données statiques (mock)
     return fallback;
   }
 }
@@ -78,8 +94,28 @@ interface ApiDonation {
 
 export const api = {
   
-  // --- LOGIN AMÉLIORÉ ---
+  // --- LOGIN ---
   login: async (loginInput: string, passwordInput: string): Promise<{ success: boolean; user?: ApiUser; error?: string }> => {
+    
+    // CAS SPÉCIAL VERCEL / PRODUCTION
+    // Si on est en ligne, on coupe court au fetch qui va échouer (CORS/Mixed Content)
+    if (isMixedContentRestriction) {
+        if (loginInput === 'admin' && passwordInput === 'password') {
+            return { 
+                success: true, 
+                user: {
+                    id: 'dev-1',
+                    username: 'Admin Demo (Vercel)',
+                    email: 'admin@comfort.org',
+                    role: 'superadmin',
+                    created_at: new Date().toISOString()
+                }
+            };
+        }
+        return { success: false, error: "Mode Démo (Vercel) : Utilisez admin / password" };
+    }
+
+    // CAS NORMAL (Localhost ou Serveur Configuré)
     try {
         const response = await fetch(`${API_BASE_URL}/login.php`, {
             method: "POST",
@@ -93,24 +129,16 @@ export const api = {
             })
         });
 
-        // Lecture en texte d'abord pour déboguer les erreurs PHP cachées
         const text = await response.text();
-        console.log("Raw Server Response:", text); // Vérifiez la console (F12) pour voir ce que le serveur renvoie exactement
-
+        
         let data;
         try {
-            // On essaie de parser le JSON (même s'il y a des caractères invisibles avant/après)
             data = JSON.parse(text.trim());
         } catch (e) {
             console.error("Erreur parsing JSON:", e);
-            // Si ce n'est pas du JSON, c'est peut-être une erreur PHP brute
-            if (text.includes("<b>Warning</b>") || text.includes("<b>Notice</b>") || text.includes("<b>Fatal error</b>")) {
-                 return { success: false, error: "Erreur serveur PHP (voir console)" };
-            }
-            return { success: false, error: "Format de réponse invalide." };
+            return { success: false, error: "Erreur serveur PHP (format invalide)" };
         }
         
-        // Si le serveur répond 200 OK et renvoie un user
         if (response.ok && data.user) {
             return { success: true, user: data.user };
         } else {
@@ -120,14 +148,13 @@ export const api = {
     } catch (err) {
         console.error("Erreur Réseau/CORS:", err);
         
-        // --- MODE SECOURS (DEV ONLY) ---
-        // Gardé pour vous permettre de tester l'interface même si l'API bloque
+        // Fallback local aussi, au cas où le serveur est éteint
         if (loginInput === 'admin' && passwordInput === 'password') {
             return { 
                 success: true, 
                 user: {
                     id: 'dev-1',
-                    username: 'Admin Dev',
+                    username: 'Admin Dev (Local)',
                     email: 'admin@comfort.org',
                     role: 'superadmin',
                     created_at: new Date().toISOString()
@@ -135,7 +162,7 @@ export const api = {
             };
         }
 
-        return { success: false, error: "Erreur de connexion. Vérifiez la console (F12)." };
+        return { success: false, error: "Impossible de contacter le serveur." };
     }
   },
 
@@ -143,7 +170,6 @@ export const api = {
 
   getProjects: async (): Promise<Project[]> => {
     const actions = await fetchData<ApiAction[]>('actions.php', []);
-    // Mapping des données API vers le format Frontend
     if (!Array.isArray(actions) || actions.length === 0) return PROJECTS;
     
     return actions.map(action => ({
@@ -189,8 +215,8 @@ export const api = {
   },
 
   getSettings: () => fetchData<SiteSettings>('settings.php', {
-    logoUrl: `${API_BASE_URL}/assets/images/logo1.png`, 
-    faviconUrl: `${API_BASE_URL}/assets/images/favicon.ico`,
+    logoUrl: isMixedContentRestriction ? 'https://placehold.co/120x120/01217d/ffffff/png?text=Logo' : `${API_BASE_URL}/assets/images/logo1.png`, 
+    faviconUrl: isMixedContentRestriction ? '' : `${API_BASE_URL}/assets/images/favicon.ico`,
     siteName: 'COMFORT Asbl',
     contactEmail: 'contact@comfort-asbl.org',
     contactPhone: '+243 994 280 037',
@@ -204,6 +230,8 @@ export const api = {
   // --- ACTIONS POST ---
 
   register: async (userData: any): Promise<{ success: boolean; error?: string }> => {
+    if (isMixedContentRestriction) return { success: false, error: "Inscription désactivée en mode démo (Vercel)." };
+    
     try {
         const response = await fetch(`${API_BASE_URL}/users.php`, {
             method: 'POST',
@@ -221,6 +249,8 @@ export const api = {
   },
 
   updateUser: async (id: string, userData: any): Promise<{ success: boolean; error?: string }> => {
+    if (isMixedContentRestriction) return { success: true }; // Simulation succès
+    
     try {
         const response = await fetch(`${API_BASE_URL}/users.php?id=${id}`, {
             method: 'PUT',
