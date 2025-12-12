@@ -118,6 +118,29 @@ export const api = {
     }
   },
 
+  // --- UPLOAD FICHIER ---
+  uploadFile: async (file: File, folder: string = 'uploads') => {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('folder', folder); // Le serveur PHP doit gérer ce dossier dans assets/images/
+
+      try {
+          const response = await fetch(`${API_BASE_URL}/upload.php`, {
+              method: 'POST',
+              body: formData // Pas de Content-Type header, fetch le met automatiquement pour multipart
+          });
+
+          if (!response.ok) return { success: false, error: "Erreur upload" };
+          
+          const data = await response.json();
+          // On attend que le serveur renvoie { success: true, path: 'assets/images/...' }
+          return data; 
+      } catch (e) {
+          console.error("Upload Error:", e);
+          return { success: false, error: "Erreur réseau upload" };
+      }
+  },
+
   // --- PUBLIC GETTERS (Mapping pour le Frontend) ---
 
   getProjects: async (): Promise<Project[]> => {

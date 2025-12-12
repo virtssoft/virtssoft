@@ -1,10 +1,76 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, FileText, Settings, LogOut, DollarSign, Activity, Bell, Mail, Plus, Edit, Trash2, Handshake, Briefcase, X, Check, Eye } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Settings, LogOut, DollarSign, Activity, Bell, Mail, Plus, Edit, Trash2, Handshake, Briefcase, X, Check, Eye, UploadCloud, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { api, ApiUser, ApiAction, ApiArticle, ApiDonation, ApiPartner } from '../services/api';
+
+/* --- IMAGE UPLOAD COMPONENT --- */
+interface ImageUploadProps {
+    label: string;
+    value: string;
+    folder: string;
+    onChange: (path: string) => void;
+}
+
+const ImageUploader: React.FC<ImageUploadProps> = ({ label, value, folder, onChange }) => {
+    const [uploading, setUploading] = useState(false);
+    
+    // Determine preview URL (handle relative vs absolute)
+    const previewUrl = value 
+        ? (value.startsWith('http') ? value : `http://localhost/api/${value}`) 
+        : null;
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setUploading(true);
+            const file = e.target.files[0];
+            
+            // Appel API pour upload
+            const result = await api.uploadFile(file, folder);
+            
+            setUploading(false);
+            if (result.success && result.path) {
+                // Le serveur doit renvoyer ex: "assets/images/actions/monfichier.jpg"
+                onChange(result.path);
+            } else {
+                alert("Erreur lors de l'upload : " + (result.error || "Inconnue"));
+            }
+        }
+    };
+
+    return (
+        <div className="mb-4">
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">{label}</label>
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors relative">
+                {previewUrl ? (
+                    <div className="relative w-full h-32 mb-3 group">
+                        <img src={previewUrl} alt="Preview" className="w-full h-full object-contain rounded" />
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded">
+                            <span className="text-white text-xs font-bold">Changer l'image</span>
+                        </div>
+                    </div>
+                ) : (
+                    <UploadCloud className="text-gray-400 mb-2" size={32} />
+                )}
+                
+                <input 
+                    type="file" 
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    disabled={uploading}
+                />
+                
+                <p className="text-xs text-gray-500 font-medium">
+                    {uploading ? "Téléversement..." : (value ? "Cliquez pour remplacer" : "Cliquez ou glissez une image")}
+                </p>
+                {value && <p className="text-[10px] text-gray-400 mt-1 truncate w-full text-center">{value}</p>}
+            </div>
+        </div>
+    );
+};
 
 /* --- MODAL COMPONENT --- */
 interface ModalProps {
@@ -71,6 +137,10 @@ const AdminDashboard: React.FC = () => {
   const [blogs, setBlogs] = useState<ApiArticle[]>([]); // Articles.php
   const [partners, setPartners] = useState<ApiPartner[]>([]);
   
+  // Carousel State
+  const [currentGalleryIndex, setCurrentGalleryIndex] = useState(0);
+  const galleryImages = Array.from({ length: 10 }, (_, i) => `http://localhost/api/assets/images/gallery/gallery${i + 1}.jpg`);
+
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<'project'|'blog'|'partner'|'user'|'donation'>('project');
@@ -97,6 +167,16 @@ const AdminDashboard: React.FC = () => {
         loadAllData();
     }
   }, [isAuthenticated, user]);
+
+  // Gallery Carousel Effect
+  useEffect(() => {
+    if (activeTab === 'dashboard') {
+        const timer = setInterval(() => {
+            setCurrentGalleryIndex((prev) => (prev + 1) % galleryImages.length);
+        }, 4000);
+        return () => clearInterval(timer);
+    }
+  }, [activeTab, galleryImages.length]);
 
   const handleLogout = () => {
     logout(); 
@@ -161,6 +241,12 @@ const AdminDashboard: React.FC = () => {
       if (modalType === 'project') { // Actions
           return (
               <>
+                <ImageUploader 
+                    label="Image du Projet" 
+                    value={editingItem.image_url || ''} 
+                    folder="actions" 
+                    onChange={(path) => setEditingItem({...editingItem, image_url: path})} 
+                />
                 <FormField label="Titre" value={editingItem.titre || ''} onChange={(v:string) => setEditingItem({...editingItem, titre: v})} />
                 <FormField label="Catégorie" value={editingItem.categorie || ''} onChange={(v:string) => setEditingItem({...editingItem, categorie: v})} />
                 <FormField label="Description" type="textarea" value={editingItem.description || ''} onChange={(v:string) => setEditingItem({...editingItem, description: v})} />
@@ -169,30 +255,39 @@ const AdminDashboard: React.FC = () => {
                     <FormField label="Date Fin" type="date" value={editingItem.date_fin || ''} onChange={(v:string) => setEditingItem({...editingItem, date_fin: v})} />
                 </div>
                 <FormField label="Statut" type="select" options={[{label:'En Cours', value:'en_cours'}, {label:'Terminé', value:'termine'}, {label:'À Venir', value:'a_venir'}]} value={editingItem.statut || 'en_cours'} onChange={(v:string) => setEditingItem({...editingItem, statut: v})} />
-                <FormField label="Image URL" value={editingItem.image_url || ''} onChange={(v:string) => setEditingItem({...editingItem, image_url: v})} />
               </>
           );
       }
       if (modalType === 'blog') { // Articles
         return (
             <>
+              <ImageUploader 
+                    label="Image de l'Article" 
+                    value={editingItem.image_url || ''} 
+                    folder="blog" 
+                    onChange={(path) => setEditingItem({...editingItem, image_url: path})} 
+              />
               <FormField label="Titre" value={editingItem.titre || ''} onChange={(v:string) => setEditingItem({...editingItem, titre: v})} />
               <FormField label="Contenu" type="textarea" value={editingItem.contenu || ''} onChange={(v:string) => setEditingItem({...editingItem, contenu: v})} />
               <div className="grid grid-cols-2 gap-4">
                 <FormField label="Auteur" value={editingItem.auteur || ''} onChange={(v:string) => setEditingItem({...editingItem, auteur: v})} />
                 <FormField label="Catégorie" value={editingItem.categorie || ''} onChange={(v:string) => setEditingItem({...editingItem, categorie: v})} />
               </div>
-              <FormField label="Image URL" value={editingItem.image_url || ''} onChange={(v:string) => setEditingItem({...editingItem, image_url: v})} />
             </>
         );
       }
       if (modalType === 'partner') {
           return (
               <>
+                <ImageUploader 
+                    label="Logo du Partenaire" 
+                    value={editingItem.logo_url || ''} 
+                    folder="partners" 
+                    onChange={(path) => setEditingItem({...editingItem, logo_url: path})} 
+                />
                 <FormField label="Nom" value={editingItem.nom || ''} onChange={(v:string) => setEditingItem({...editingItem, nom: v})} />
                 <FormField label="Description" type="textarea" value={editingItem.description || ''} onChange={(v:string) => setEditingItem({...editingItem, description: v})} />
                 <FormField label="Site Web" value={editingItem.site_web || ''} onChange={(v:string) => setEditingItem({...editingItem, site_web: v})} />
-                <FormField label="Logo URL" value={editingItem.logo_url || ''} onChange={(v:string) => setEditingItem({...editingItem, logo_url: v})} />
               </>
           );
       }
@@ -276,34 +371,65 @@ const AdminDashboard: React.FC = () => {
         <div className="p-8">
             {/* DASHBOARD VIEW */}
             {activeTab === 'dashboard' && (
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 animate-in fade-in duration-500">
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center">
-                        <div className="p-3 rounded-lg bg-green-50 text-green-600 mr-4"><DollarSign size={28} /></div>
-                        <div>
-                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Dons</p>
-                            <h3 className="text-2xl font-bold text-gray-900">${donations.reduce((acc, curr) => acc + parseFloat(curr.montant), 0).toFixed(0)}</h3>
+                <div className="space-y-8 animate-in fade-in duration-500">
+                    {/* STATS CARDS */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center">
+                            <div className="p-3 rounded-lg bg-green-50 text-green-600 mr-4"><DollarSign size={28} /></div>
+                            <div>
+                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Dons</p>
+                                <h3 className="text-2xl font-bold text-gray-900">${donations.reduce((acc, curr) => acc + parseFloat(curr.montant), 0).toFixed(0)}</h3>
+                            </div>
+                        </div>
+                        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center">
+                            <div className="p-3 rounded-lg bg-blue-50 text-blue-600 mr-4"><Users size={28} /></div>
+                            <div>
+                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Utilisateurs</p>
+                                <h3 className="text-2xl font-bold text-gray-900">{users.length}</h3>
+                            </div>
+                        </div>
+                        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center">
+                            <div className="p-3 rounded-lg bg-purple-50 text-purple-600 mr-4"><Briefcase size={28} /></div>
+                            <div>
+                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Projets Actifs</p>
+                                <h3 className="text-2xl font-bold text-gray-900">{projects.filter(p => p.statut === 'en_cours').length}</h3>
+                            </div>
+                        </div>
+                        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center">
+                            <div className="p-3 rounded-lg bg-orange-50 text-orange-600 mr-4"><FileText size={28} /></div>
+                            <div>
+                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Articles</p>
+                                <h3 className="text-2xl font-bold text-gray-900">{blogs.length}</h3>
+                            </div>
                         </div>
                     </div>
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center">
-                        <div className="p-3 rounded-lg bg-blue-50 text-blue-600 mr-4"><Users size={28} /></div>
-                        <div>
-                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Utilisateurs</p>
-                            <h3 className="text-2xl font-bold text-gray-900">{users.length}</h3>
+
+                    {/* GALLERY CAROUSEL */}
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden relative h-96 group">
+                        <img 
+                            src={galleryImages[currentGalleryIndex]} 
+                            alt={`Gallery ${currentGalleryIndex + 1}`} 
+                            className="w-full h-full object-cover transition-all duration-700 ease-in-out"
+                            onError={(e) => e.currentTarget.src = "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?q=80&w=2070&auto=format&fit=crop"}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-8">
+                            <div className="text-white">
+                                <h3 className="text-2xl font-serif font-bold mb-2">Galerie Photos</h3>
+                                <p className="text-white/80">Aperçu automatique des images du dossier assets/images/gallery</p>
+                            </div>
                         </div>
-                    </div>
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center">
-                        <div className="p-3 rounded-lg bg-purple-50 text-purple-600 mr-4"><Briefcase size={28} /></div>
-                        <div>
-                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Projets Actifs</p>
-                            <h3 className="text-2xl font-bold text-gray-900">{projects.filter(p => p.statut === 'en_cours').length}</h3>
-                        </div>
-                    </div>
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center">
-                        <div className="p-3 rounded-lg bg-orange-50 text-orange-600 mr-4"><FileText size={28} /></div>
-                        <div>
-                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Articles</p>
-                            <h3 className="text-2xl font-bold text-gray-900">{blogs.length}</h3>
-                        </div>
+                        <button 
+                            onClick={() => setCurrentGalleryIndex((prev) => (prev - 1 + galleryImages.length) % galleryImages.length)}
+                            className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 p-2 rounded-full text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                            <ChevronLeft size={24} />
+                        </button>
+                        <button 
+                            onClick={() => setCurrentGalleryIndex((prev) => (prev + 1) % galleryImages.length)}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 p-2 rounded-full text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                            <ChevronRight size={24} />
+                        </button>
                     </div>
                 </div>
             )}
@@ -344,12 +470,14 @@ const AdminDashboard: React.FC = () => {
                         </div>
                         <div className="bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200">
                             <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50"><tr><th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Titre</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Catégorie</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Statut</th><th className="px-6 py-3 text-right">Actions</th></tr></thead>
+                                <thead className="bg-gray-50"><tr><th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Image</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Titre</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Statut</th><th className="px-6 py-3 text-right">Actions</th></tr></thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
                                     {projects.map(p => (
                                         <tr key={p.id}>
+                                            <td className="px-6 py-4">
+                                                <img src={p.image_url?.startsWith('http') ? p.image_url : `http://localhost/api/${p.image_url}`} alt="" className="w-12 h-12 object-cover rounded bg-gray-100" />
+                                            </td>
                                             <td className="px-6 py-4 text-sm font-medium text-gray-900">{p.titre}</td>
-                                            <td className="px-6 py-4 text-sm text-gray-500">{p.categorie}</td>
                                             <td className="px-6 py-4"><span className={`px-2 py-1 rounded text-xs font-bold uppercase ${p.statut === 'en_cours' ? 'bg-blue-100 text-blue-700' : p.statut === 'termine' ? 'bg-green-100 text-green-700' : 'bg-gray-100'}`}>{p.statut.replace('_', ' ')}</span></td>
                                             <td className="px-6 py-4 text-right flex justify-end space-x-2">
                                                 <button onClick={() => handleEdit('project', p)} className="text-blue-600 hover:bg-blue-50 p-2 rounded"><Edit size={16}/></button>
@@ -370,10 +498,13 @@ const AdminDashboard: React.FC = () => {
                         </div>
                         <div className="bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200">
                             <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50"><tr><th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Titre</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Auteur</th><th className="px-6 py-3 text-right">Actions</th></tr></thead>
+                                <thead className="bg-gray-50"><tr><th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Image</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Titre</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Auteur</th><th className="px-6 py-3 text-right">Actions</th></tr></thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
                                     {blogs.map(b => (
                                         <tr key={b.id}>
+                                            <td className="px-6 py-4">
+                                                <img src={b.image_url?.startsWith('http') ? b.image_url : `http://localhost/api/${b.image_url}`} alt="" className="w-12 h-12 object-cover rounded bg-gray-100" />
+                                            </td>
                                             <td className="px-6 py-4 text-sm font-medium text-gray-900">{b.titre}</td>
                                             <td className="px-6 py-4 text-sm text-gray-500">{b.auteur}</td>
                                             <td className="px-6 py-4 text-right flex justify-end space-x-2">
@@ -440,12 +571,14 @@ const AdminDashboard: React.FC = () => {
                      <div className="flex justify-end mb-4"><button onClick={() => handleCreate('partner')} className="bg-comfort-blue hover:bg-blue-900 text-white px-4 py-2 rounded-lg font-bold shadow flex items-center"><Plus size={16} className="mr-2"/> Nouveau Partenaire</button></div>
                      <div className="bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200">
                         <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50"><tr><th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Nom</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Site Web</th><th className="px-6 py-3 text-right">Actions</th></tr></thead>
+                            <thead className="bg-gray-50"><tr><th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Logo</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Nom</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Site Web</th><th className="px-6 py-3 text-right">Actions</th></tr></thead>
                             <tbody className="bg-white divide-y divide-gray-200">
                                 {partners.map(p => (
                                     <tr key={p.id} className="hover:bg-gray-50 transition-colors">
-                                        <td className="px-6 py-4 text-sm font-medium text-gray-900 flex items-center">
-                                            <img src={p.logo_url} alt="" className="w-8 h-8 object-contain mr-3 border rounded bg-gray-50"/>
+                                        <td className="px-6 py-4">
+                                            <img src={p.logo_url?.startsWith('http') ? p.logo_url : `http://localhost/api/${p.logo_url}`} alt="" className="w-16 h-16 object-contain border rounded bg-gray-50" />
+                                        </td>
+                                        <td className="px-6 py-4 text-sm font-medium text-gray-900">
                                             {p.nom}
                                         </td>
                                         <td className="px-6 py-4 text-sm text-comfort-blue hover:underline"><a href={p.site_web} target="_blank" rel="noreferrer">{p.site_web}</a></td>
