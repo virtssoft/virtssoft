@@ -1,46 +1,36 @@
 
 import { Project, BlogPost, Partner, TeamMember, Testimonial, SiteSettings } from '../types';
-import { PROJECTS, BLOG_POSTS, PARTNERS, TEAM_MEMBERS, TESTIMONIALS, CONTACT_INFO } from '../pages/constants';
+import { PROJECTS, BLOG_POSTS, PARTNERS, TEAM_MEMBERS, TESTIMONIALS } from '../pages/constants';
 
-// --- CONFIGURATION API ---
-const API_BASE_URL = 'http://localhost/api';
+// --- CONFIGURATION SIMPLE ---
+// C'est l'adresse unique de votre serveur.
+const API_BASE_URL = 'http://localhost/api'; 
 
-// Détection de l'environnement : Est-ce qu'on est sur un site HTTPS (Vercel) essayant de taper sur du HTTP Local ?
-const isMixedContentRestriction = typeof window !== 'undefined' && 
-                                  window.location.protocol === 'https:' && 
-                                  API_BASE_URL.includes('localhost');
-
-// Helper pour les images
-const getImageUrl = (path: string | undefined) => {
-  if (!path) return 'https://placehold.co/600x400?text=No+Image';
-  
-  // Si on est sur Vercel et que l'image pointe sur localhost, on renvoie une image placeholder
-  if (isMixedContentRestriction && path.includes('localhost')) {
-      return `https://placehold.co/600x400?text=Image+Localhost+Non+Visible`;
-  }
-
-  if (path.startsWith('http')) return path;
-  const cleanPath = path.startsWith('/') ? path : `/${path}`;
-  return `${API_BASE_URL}${cleanPath}`;
-};
-
-// Fonction générique pour récupérer les données (Blog, Projets, etc.)
+// Fonction simple pour lire les données
 async function fetchData<T>(endpoint: string, fallback: T): Promise<T> {
-  // 1. Si on est sur Vercel (HTTPS) et API sur Localhost -> On retourne directement le fallback (Mock)
-  // Cela évite l'erreur rouge "Mixed Content" dans la console
-  if (isMixedContentRestriction) {
-      // console.warn(`[Mode Démo] Fetch bloqué vers ${endpoint} (HTTPS ne peut pas accéder à HTTP Localhost). Utilisation des données statiques.`);
-      return fallback;
-  }
-
+  const url = `${API_BASE_URL}/${endpoint}`;
+  
   try {
-    const response = await fetch(`${API_BASE_URL}/${endpoint}`);
+    const response = await fetch(url);
+
+    // Si le serveur répond une erreur (ex: 404 fichier introuvable), on le dit
     if (!response.ok) {
+        console.error(`[API ERROR] Le serveur a répondu ${response.status} pour ${url}`);
         return fallback;
     }
-    const data = await response.json();
-    return data;
+
+    const text = await response.text();
+    
+    // On essaie de transformer la réponse en JSON
+    try {
+        return JSON.parse(text);
+    } catch (e) {
+        console.error(`[API ERROR] Le serveur n'a pas renvoyé du JSON valide pour ${url}. Réponse reçue :`, text);
+        return fallback;
+    }
+
   } catch (error) {
+    console.error(`[API ERROR] Impossible de contacter le serveur sur ${url}. Vérifiez que XAMPP est allumé.`, error);
     return fallback;
   }
 }
@@ -94,90 +84,60 @@ interface ApiDonation {
 
 export const api = {
   
-  // --- LOGIN ---
+  // --- LOGIN (Simplifié) ---
   login: async (loginInput: string, passwordInput: string): Promise<{ success: boolean; user?: ApiUser; error?: string }> => {
-    
-    // CAS SPÉCIAL VERCEL / PRODUCTION
-    // Si on est en ligne, on coupe court au fetch qui va échouer (CORS/Mixed Content)
-    if (isMixedContentRestriction) {
-        if (loginInput === 'admin' && passwordInput === 'password') {
-            return { 
-                success: true, 
-                user: {
-                    id: 'dev-1',
-                    username: 'Admin Demo (Vercel)',
-                    email: 'admin@comfort.org',
-                    role: 'superadmin',
-                    created_at: new Date().toISOString()
-                }
-            };
-        }
-        return { success: false, error: "Mode Démo (Vercel) : Utilisez admin / password" };
-    }
-
-    // CAS NORMAL (Localhost ou Serveur Configuré)
     try {
         const response = await fetch(`${API_BASE_URL}/login.php`, {
             method: "POST",
-            headers: { 
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            },
-            body: JSON.stringify({ 
-                login: loginInput, 
-                password: passwordInput 
-            })
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ login: loginInput, password: passwordInput })
         });
 
         const text = await response.text();
         
-        let data;
         try {
-            data = JSON.parse(text.trim());
+            const data = JSON.parse(text);
+            if (data.success && data.user) {
+                return { success: true, user: data.user };
+            } else {
+                return { success: false, error: data.message || "Identifiants incorrects" };
+            }
         } catch (e) {
-            console.error("Erreur parsing JSON:", e);
-            return { success: false, error: "Erreur serveur PHP (format invalide)" };
+            console.error("Erreur JSON Login:", text);
+            // BACKDOOR LOCALE : Si le serveur plante mais que vous tapez admin/password, on vous laisse entrer pour tester le design
+            if (loginInput === 'admin' && passwordInput === 'password') {
+                 return { 
+                    success: true, 
+                    user: { id: 'dev', username: 'Admin Local', email: 'admin@local', role: 'superadmin', created_at: new Date().toISOString() } 
+                 };
+            }
+            return { success: false, error: "Erreur du serveur (voir console)" };
         }
-        
-        if (response.ok && data.user) {
-            return { success: true, user: data.user };
-        } else {
-            return { success: false, error: data.error || data.message || "Identifiants incorrects" };
-        }
-
     } catch (err) {
-        console.error("Erreur Réseau/CORS:", err);
-        
-        // Fallback local aussi, au cas où le serveur est éteint
+        console.error("Erreur Réseau Login:", err);
+        // BACKDOOR LOCALE
         if (loginInput === 'admin' && passwordInput === 'password') {
-            return { 
+             return { 
                 success: true, 
-                user: {
-                    id: 'dev-1',
-                    username: 'Admin Dev (Local)',
-                    email: 'admin@comfort.org',
-                    role: 'superadmin',
-                    created_at: new Date().toISOString()
-                }
-            };
+                user: { id: 'dev', username: 'Admin Local', email: 'admin@local', role: 'superadmin', created_at: new Date().toISOString() } 
+             };
         }
-
-        return { success: false, error: "Impossible de contacter le serveur." };
+        return { success: false, error: "Serveur injoignable" };
     }
   },
 
-  // --- GET DATA ---
+  // --- GET DATA (Mappage direct) ---
 
   getProjects: async (): Promise<Project[]> => {
     const actions = await fetchData<ApiAction[]>('actions.php', []);
-    if (!Array.isArray(actions) || actions.length === 0) return PROJECTS;
+    if (actions.length === 0) return PROJECTS;
     
     return actions.map(action => ({
       id: action.id,
       title: action.titre,
       category: action.categorie,
       description: action.description,
-      image: getImageUrl(action.image_url),
+      image: action.image_url?.startsWith('http') ? action.image_url : `${API_BASE_URL}/${action.image_url}`,
       date: action.date_debut,
       endDate: action.date_fin,
       status: action.statut === 'termine' ? 'Completed' : 'Ongoing',
@@ -188,35 +148,39 @@ export const api = {
 
   getBlogPosts: async (): Promise<BlogPost[]> => {
     const articles = await fetchData<ApiArticle[]>('articles.php', []);
-    if (!Array.isArray(articles) || articles.length === 0) return BLOG_POSTS;
+    if (articles.length === 0) return BLOG_POSTS;
 
     return articles.map(article => ({
       id: article.id,
       title: article.titre,
       excerpt: article.contenu.substring(0, 150) + '...',
       author: article.auteur,
-      date: article.created_at ? new Date(article.created_at).toLocaleDateString() : 'Recent',
+      date: article.created_at,
       category: article.categorie,
-      image: getImageUrl(article.image_url)
+      image: article.image_url?.startsWith('http') ? article.image_url : `${API_BASE_URL}/${article.image_url}`
     }));
   },
 
   getPartners: async (): Promise<Partner[]> => {
     const partners = await fetchData<ApiPartner[]>('partners.php', []);
-    if (!Array.isArray(partners) || partners.length === 0) return PARTNERS;
+    if (partners.length === 0) return PARTNERS;
 
     return partners.map((p) => ({
       id: p.id,
       name: p.nom,
-      logo: getImageUrl(p.logo_url),
+      logo: p.logo_url?.startsWith('http') ? p.logo_url : `${API_BASE_URL}/${p.logo_url}`,
       description: p.description,
       type: 'Corporate'
     }));
   },
 
+  // Ces fonctions sont requises par le AdminDashboard
+  getUsers: async (): Promise<ApiUser[]> => fetchData<ApiUser[]>('users.php', []),
+  getDonations: async (): Promise<ApiDonation[]> => fetchData<ApiDonation[]>('donations.php', []),
+  
   getSettings: () => fetchData<SiteSettings>('settings.php', {
-    logoUrl: isMixedContentRestriction ? 'https://placehold.co/120x120/01217d/ffffff/png?text=Logo' : `${API_BASE_URL}/assets/images/logo1.png`, 
-    faviconUrl: isMixedContentRestriction ? '' : `${API_BASE_URL}/assets/images/favicon.ico`,
+    logoUrl: `${API_BASE_URL}/assets/images/logo1.png`, 
+    faviconUrl: `${API_BASE_URL}/assets/images/favicon.ico`,
     siteName: 'COMFORT Asbl',
     contactEmail: 'contact@comfort-asbl.org',
     contactPhone: '+243 994 280 037',
@@ -227,46 +191,34 @@ export const api = {
   getTeam: () => fetchData<TeamMember[]>('team.php', TEAM_MEMBERS),
   getTestimonials: () => fetchData<Testimonial[]>('testimonials.php', TESTIMONIALS),
 
-  // --- ACTIONS POST/PUT/DELETE (Mocked for Demo) ---
+  // --- ACTIONS (Create/Update/Delete) ---
+  // Ces fonctions envoient les données au PHP.
   
-  register: async (userData: any): Promise<{ success: boolean; error?: string }> => {
-    if (isMixedContentRestriction) return { success: false, error: "Inscription désactivée en mode démo (Vercel)." };
+  register: async (userData: any) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/users.php`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ...userData, role: 'user' })
-        });
-        const text = await response.text();
-        const data = JSON.parse(text);
-        if (response.ok && data.success) return { success: true };
-        return { success: false, error: data.message || data.error || "Erreur inscription" };
-    } catch (error) {
-        return { success: false, error: "Serveur injoignable ou erreur format" };
-    }
+        await fetch(`${API_BASE_URL}/users.php`, { method: 'POST', body: JSON.stringify(userData) });
+        return { success: true };
+    } catch(e) { return { success: false, error: "Erreur" }; }
   },
 
-  updateUser: async (id: string, userData: any): Promise<{ success: boolean; error?: string }> => {
-    return { success: true }; 
+  updateUser: async (id: string, userData: any) => {
+    try {
+        await fetch(`${API_BASE_URL}/users.php?id=${id}`, { method: 'PUT', body: JSON.stringify(userData) });
+        return { success: true };
+    } catch(e) { return { success: false, error: "Erreur lors de la mise à jour" }; }
   },
 
-  deleteItem: async (endpoint: string, id: string): Promise<{ success: boolean }> => {
-      // Mock delete
-      return { success: true };
+  deleteItem: async (endpoint: string, id: string) => {
+      try {
+        await fetch(`${API_BASE_URL}/${endpoint}.php?id=${id}`, { method: 'DELETE' });
+        return { success: true };
+      } catch (e) { return { success: false }; }
   },
 
-  createItem: async (endpoint: string, data: any): Promise<{ success: boolean; id?: string }> => {
-      // Mock create
-      return { success: true, id: Math.random().toString(36).substr(2, 9) };
-  },
-
-  getUsers: async (): Promise<ApiUser[]> => fetchData<ApiUser[]>('users.php', [
-      { id: '1', username: 'john_doe', email: 'john@example.com', role: 'user', created_at: '2023-01-01' },
-      { id: '2', username: 'admin_demo', email: 'admin@comfort.org', role: 'superadmin', created_at: '2023-01-01' }
-  ]),
-  
-  getDonations: async (): Promise<ApiDonation[]> => fetchData<ApiDonation[]>('donations.php', [
-      { id: '1', donateur_nom: 'Alice Wonderland', email: 'alice@test.com', montant: '50.00', methode: 'Stripe', status: 'Completed' },
-      { id: '2', donateur_nom: 'Bob Builder', email: 'bob@test.com', montant: '120.00', methode: 'PayPal', status: 'Pending' }
-  ])
+  createItem: async (endpoint: string, data: any) => {
+      try {
+        await fetch(`${API_BASE_URL}/${endpoint}.php`, { method: 'POST', body: JSON.stringify(data) });
+       return { success: true, id: Math.random().toString() };
+      } catch (e) { return { success: false }; }
+  }
 };

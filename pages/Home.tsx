@@ -46,16 +46,21 @@ const Home: React.FC = () => {
   const contactPhone = settings?.contactPhone || CONTACT_INFO.phone;
   const contactAddress = settings?.contactAddress || CONTACT_INFO.address;
 
+  // Function to handle image error by setting a fallback
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+      e.currentTarget.src = "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?q=80&w=2070&auto=format&fit=crop";
+  };
+
   return (
     <div className="flex flex-col min-h-screen font-sans">
       
       {/* 🟦 1. SECTION HERO - Le cœur émotionnel */}
       <section className="relative h-[650px] md:h-[800px] flex items-center overflow-hidden">
-        {/* Background Image from API */}
+        {/* Background Image from API with fallback */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
            <img 
              src="http://localhost/api/assets/images/hero-bg.jpg"
-             onError={(e) => e.currentTarget.src = "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?q=80&w=2070&auto=format&fit=crop"}
+             onError={handleImageError}
              alt="Hero Background" 
              className="absolute inset-0 w-full h-full object-cover -z-10" 
            />
@@ -216,6 +221,7 @@ const Home: React.FC = () => {
                       <img 
                         src={project.image} 
                         alt={project.title} 
+                        onError={handleImageError}
                         className="w-full h-64 object-cover transform group-hover:scale-105 transition-transform duration-700" 
                       />
                       <div className="absolute inset-0 bg-comfort-blue/0 group-hover:bg-comfort-blue/10 transition-colors"></div>
@@ -265,6 +271,7 @@ const Home: React.FC = () => {
                        <img 
                         src={testimonials[currentTestimonial].image} 
                         alt={testimonials[currentTestimonial].name} 
+                        onError={handleImageError}
                         className="w-16 h-16 rounded-full border-2 border-white/30 object-cover mb-4"
                        />
                        <h4 className="font-bold text-lg">{testimonials[currentTestimonial].name}</h4>
@@ -314,7 +321,12 @@ const Home: React.FC = () => {
                 {blogPosts.slice(0, 3).map((post) => (
                     <div key={post.id} className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group">
                         <div className="relative h-48 overflow-hidden">
-                            <img src={post.image} alt={post.title} className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" />
+                            <img 
+                                src={post.image} 
+                                alt={post.title} 
+                                onError={handleImageError}
+                                className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" 
+                            />
                             <div className="absolute top-4 left-4 bg-white/90 px-3 py-1 rounded text-xs font-bold text-comfort-blue uppercase">
                                 {post.category}
                             </div>
@@ -353,7 +365,8 @@ const Home: React.FC = () => {
                     <div key={`p1-${partner.id}`} className="w-32 md:w-48 flex items-center justify-center shrink-0">
                         <img 
                             src={partner.logo} 
-                            alt={partner.name} 
+                            alt={partner.name}
+                            onError={handleImageError} 
                             className="max-h-16 md:max-h-20 w-auto object-contain grayscale hover:grayscale-0 transition-all duration-500 opacity-60 hover:opacity-100 cursor-pointer transform hover:scale-110"
                         />
                     </div>
@@ -366,6 +379,7 @@ const Home: React.FC = () => {
                         <img 
                             src={partner.logo} 
                             alt={partner.name} 
+                            onError={handleImageError}
                             className="max-h-16 md:max-h-20 w-auto object-contain grayscale hover:grayscale-0 transition-all duration-500 opacity-60 hover:opacity-100 cursor-pointer transform hover:scale-110"
                         />
                     </div>
