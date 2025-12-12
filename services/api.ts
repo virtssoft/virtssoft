@@ -29,7 +29,7 @@ async function fetchData<T>(endpoint: string, fallback: T): Promise<T> {
   // 1. Si on est sur Vercel (HTTPS) et API sur Localhost -> On retourne directement le fallback (Mock)
   // Cela évite l'erreur rouge "Mixed Content" dans la console
   if (isMixedContentRestriction) {
-      console.warn(`[Mode Démo] Fetch bloqué vers ${endpoint} (HTTPS ne peut pas accéder à HTTP Localhost). Utilisation des données statiques.`);
+      // console.warn(`[Mode Démo] Fetch bloqué vers ${endpoint} (HTTPS ne peut pas accéder à HTTP Localhost). Utilisation des données statiques.`);
       return fallback;
   }
 
@@ -227,11 +227,10 @@ export const api = {
   getTeam: () => fetchData<TeamMember[]>('team.php', TEAM_MEMBERS),
   getTestimonials: () => fetchData<Testimonial[]>('testimonials.php', TESTIMONIALS),
 
-  // --- ACTIONS POST ---
-
+  // --- ACTIONS POST/PUT/DELETE (Mocked for Demo) ---
+  
   register: async (userData: any): Promise<{ success: boolean; error?: string }> => {
     if (isMixedContentRestriction) return { success: false, error: "Inscription désactivée en mode démo (Vercel)." };
-    
     try {
         const response = await fetch(`${API_BASE_URL}/users.php`, {
             method: 'POST',
@@ -240,7 +239,6 @@ export const api = {
         });
         const text = await response.text();
         const data = JSON.parse(text);
-        
         if (response.ok && data.success) return { success: true };
         return { success: false, error: data.message || data.error || "Erreur inscription" };
     } catch (error) {
@@ -249,22 +247,26 @@ export const api = {
   },
 
   updateUser: async (id: string, userData: any): Promise<{ success: boolean; error?: string }> => {
-    if (isMixedContentRestriction) return { success: true }; // Simulation succès
-    
-    try {
-        const response = await fetch(`${API_BASE_URL}/users.php?id=${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(userData)
-        });
-        const data = await response.json();
-        if (response.ok) return { success: true };
-        return { success: false, error: data.message || "Erreur mise à jour" };
-    } catch (error) {
-        return { success: false, error: "Erreur réseau" };
-    }
+    return { success: true }; 
   },
 
-  getUsers: async (): Promise<ApiUser[]> => fetchData<ApiUser[]>('users.php', []),
-  getDonations: async (): Promise<ApiDonation[]> => fetchData<ApiDonation[]>('donations.php', [])
+  deleteItem: async (endpoint: string, id: string): Promise<{ success: boolean }> => {
+      // Mock delete
+      return { success: true };
+  },
+
+  createItem: async (endpoint: string, data: any): Promise<{ success: boolean; id?: string }> => {
+      // Mock create
+      return { success: true, id: Math.random().toString(36).substr(2, 9) };
+  },
+
+  getUsers: async (): Promise<ApiUser[]> => fetchData<ApiUser[]>('users.php', [
+      { id: '1', username: 'john_doe', email: 'john@example.com', role: 'user', created_at: '2023-01-01' },
+      { id: '2', username: 'admin_demo', email: 'admin@comfort.org', role: 'superadmin', created_at: '2023-01-01' }
+  ]),
+  
+  getDonations: async (): Promise<ApiDonation[]> => fetchData<ApiDonation[]>('donations.php', [
+      { id: '1', donateur_nom: 'Alice Wonderland', email: 'alice@test.com', montant: '50.00', methode: 'Stripe', status: 'Completed' },
+      { id: '2', donateur_nom: 'Bob Builder', email: 'bob@test.com', montant: '120.00', methode: 'PayPal', status: 'Pending' }
+  ])
 };

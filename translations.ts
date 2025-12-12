@@ -84,7 +84,7 @@ export const translations = {
       donate_button: 'Faire un don'
     },
     testimonials: {
-      title: 'Paroles de nos bénéficiaires',
+      title: 'Témoignages de nos bénéficiaires',
       page_title: 'Témoignages',
       subtitle: 'Ce que disent nos bénéficiaires et partenaires'
     },
