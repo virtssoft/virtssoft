@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useData } from '../context/DataContext';
-import { ArrowRight, Heart, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight, Heart, ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 
 const Projects: React.FC = () => {
   const { t } = useLanguage();
@@ -52,33 +52,28 @@ const Projects: React.FC = () => {
                     alt={project.title} 
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
-                    <span className="absolute top-4 right-4 bg-white/90 px-3 py-1 text-xs font-bold uppercase tracking-wide text-comfort-blue rounded-full">
+                    <span className={`absolute top-4 right-4 px-3 py-1 text-xs font-bold uppercase tracking-wide rounded-full ${project.status === 'Ongoing' ? 'bg-blue-100 text-comfort-blue' : 'bg-green-100 text-green-700'}`}>
                     {project.status === 'Ongoing' ? t('projects.ongoing') : t('projects.completed')}
                     </span>
                 </div>
                 <div className="p-6">
-                    <div className="text-xs font-bold text-gray-400 uppercase mb-2">{project.category}</div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-comfort-blue transition-colors">
+                    <div className="flex justify-between items-start mb-3">
+                         <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">{project.category}</div>
+                         <div className="flex items-center text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded">
+                            <Calendar size={12} className="mr-1" />
+                            {project.date} 
+                            {project.endDate && ` - ${project.endDate}`}
+                         </div>
+                    </div>
+                    
+                    <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-comfort-blue transition-colors leading-tight">
                     <Link to={`/projects/${project.id}`}>{project.title}</Link>
                     </h3>
-                    <p className="text-gray-600 text-sm mb-6 line-clamp-3">
+                    
+                    <p className="text-gray-600 text-sm mb-6 line-clamp-2 min-h-[40px]">
                     {project.description}
                     </p>
                     
-                    {/* Progress Bar */}
-                    <div className="mb-4">
-                    <div className="flex justify-between text-xs font-semibold mb-1 text-gray-500">
-                        <span>${project.raised} {t('projects.raised')}</span>
-                        <span>{t('projects.goal')}: ${project.goal}</span>
-                    </div>
-                    <div className="w-full bg-gray-100 rounded-full h-2">
-                        <div 
-                        className="bg-comfort-blue h-2 rounded-full" 
-                        style={{width: `${Math.min((project.raised / project.goal) * 100, 100)}%`}}
-                        ></div>
-                    </div>
-                    </div>
-
                     <Link 
                     to={`/projects/${project.id}`} 
                     className="block w-full text-center border border-comfort-blue text-comfort-blue py-2 rounded font-semibold hover:bg-comfort-blue hover:text-white transition-colors text-sm"

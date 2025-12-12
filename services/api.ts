@@ -100,7 +100,7 @@ export const api = {
   getProjects: async (): Promise<Project[]> => {
     try {
       const actions = await fetchData<ApiAction[]>('actions.php', []);
-      if (actions.length === 0) return PROJECTS; // Keep fallback for projects for now if desired, or remove to be strict
+      if (actions.length === 0) return PROJECTS; 
       
       return actions.map(action => ({
         id: action.id,
@@ -109,6 +109,7 @@ export const api = {
         description: action.description,
         image: getImageUrl(action.image_url),
         date: action.date_debut,
+        endDate: action.date_fin,
         status: action.statut === 'termine' ? 'Completed' : 'Ongoing',
         goal: 10000, 
         raised: 0    
@@ -139,7 +140,6 @@ export const api = {
 
   getPartners: async (): Promise<Partner[]> => {
     try {
-      // Return empty array as fallback instead of PARTNERS constant to strictly show DB content
       const partners = await fetchData<ApiPartner[]>('partners.php', []);
       
       return partners.map((p) => ({
@@ -150,7 +150,7 @@ export const api = {
         type: 'Corporate' // Default type
       }));
     } catch (e) {
-      return []; // Return empty array on error, do not show fake data
+      return []; 
     }
   },
 

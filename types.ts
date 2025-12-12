@@ -6,6 +6,7 @@ export interface Project {
   description: string;
   image: string;
   date: string;
+  endDate?: string;
   status: 'Ongoing' | 'Completed';
   goal: number;
   raised: number;
