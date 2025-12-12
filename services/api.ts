@@ -2,47 +2,41 @@
 import { Project, BlogPost, Partner, TeamMember, Testimonial, SiteSettings } from '../types';
 import { PROJECTS, BLOG_POSTS, PARTNERS, TEAM_MEMBERS, TESTIMONIALS, CONTACT_INFO } from '../pages/constants';
 
-// --- CONFIGURATION API ---
-// On force l'adresse ici. Si votre dossier s'appelle autrement que "api", changez-le ici.
+// --- CONFIGURATION STRICTE (Comme dans votre exemple qui fonctionne) ---
 const API_BASE_URL = 'http://localhost/api';
 
-// Helper pour corriger les URLs des images venant de la BDD
+// Helper pour les images
 const getImageUrl = (path: string | undefined) => {
   if (!path) return 'https://placehold.co/600x400?text=No+Image';
   if (path.startsWith('http')) return path;
-  
-  // Nettoyer le chemin
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
   return `${API_BASE_URL}${cleanPath}`;
 };
 
-// Fonction générique de récupération avec sécurité maximale
+// Fonction générique pour récupérer les données (Blog, Projets, etc.)
 async function fetchData<T>(endpoint: string, fallback: T): Promise<T> {
   try {
     const response = await fetch(`${API_BASE_URL}/${endpoint}`);
-    
     if (!response.ok) {
-        throw new Error(`HTTP Error ${response.status}`);
+        // Si erreur HTTP (404, 500), on utilise le fallback
+        console.warn(`[API] Erreur ${response.status} sur ${endpoint}`);
+        return fallback;
     }
-    
-    const json = await response.json();
-    return json;
+    const data = await response.json();
+    return data;
   } catch (error) {
-    // En cas d'erreur, on retourne silencieusement la donnée de test (fallback)
-    // pour que le site ne soit jamais vide.
-    console.warn(`API non disponible sur ${endpoint}, utilisation des données locales.`);
+    // Si serveur éteint ou erreur réseau, on utilise le fallback pour que le site s'affiche quand même
+    console.warn(`[API] Impossible de joindre ${endpoint}. Utilisation des données locales.`);
     return fallback;
   }
 }
 
-// --- INTERFACES API (Identiques à votre BD) ---
-interface ApiArticle {
+// Interfaces API
+export interface ApiUser {
   id: string;
-  titre: string;
-  contenu: string;
-  image_url: string;
-  auteur: string;
-  categorie: string;
+  username: string;
+  email: string;
+  role: string;
   created_at: string;
 }
 
@@ -57,20 +51,22 @@ interface ApiAction {
   date_fin: string;
 }
 
+interface ApiArticle {
+  id: string;
+  titre: string;
+  contenu: string;
+  image_url: string;
+  auteur: string;
+  categorie: string;
+  created_at: string;
+}
+
 interface ApiPartner {
   id: string;
   nom: string;
   logo_url: string;
   site_web: string;
   description: string;
-}
-
-export interface ApiUser {
-  id: string;
-  username: string;
-  email: string;
-  role: string;
-  created_at: string;
 }
 
 interface ApiDonation {
@@ -84,7 +80,78 @@ interface ApiDonation {
 
 export const api = {
   
-  // --- DONNÉES PUBLIQUES (GET) ---
+  // --- LOGIN (Copie conforme de votre script JS qui fonctionne) ---
+  login: async (loginInput: string, passwordInput: string): Promise<{ success: boolean; user?: ApiUser; error?: string }> => {
+    try {
+        const res = await fetch(`${API_BASE_URL}/login.php`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ login: loginInput, password: passwordInput })
+        });
+        
+        const data = await res.json();
+        
+        if (res.ok) {
+            // Succès
+            return { success: true, user: data.user || data };
+        } else {
+            // Erreur renvoyée par PHP (ex: mot de passe incorrect)
+            return { success: false, error: data.error || "Erreur de connexion" };
+        }
+    } catch (err) {
+        // Erreur réseau (serveur éteint, mauvaise URL)
+        console.error(err);
+        return { success: false, error: "Impossible de se connecter au serveur (Vérifiez que http://localhost/api est accessible)" };
+    }
+  },
+
+  // --- GET DATA (Récupération données) ---
+
+  getProjects: async (): Promise<Project[]> => {
+    const actions = await fetchData<ApiAction[]>('actions.php', []);
+    if (!Array.isArray(actions) || actions.length === 0) return PROJECTS;
+    
+    return actions.map(action => ({
+      id: action.id,
+      title: action.titre,
+      category: action.categorie,
+      description: action.description,
+      image: getImageUrl(action.image_url),
+      date: action.date_debut,
+      endDate: action.date_fin,
+      status: action.statut === 'termine' ? 'Completed' : 'Ongoing',
+      goal: 10000, 
+      raised: 0    
+    }));
+  },
+
+  getBlogPosts: async (): Promise<BlogPost[]> => {
+    const articles = await fetchData<ApiArticle[]>('articles.php', []);
+    if (!Array.isArray(articles) || articles.length === 0) return BLOG_POSTS;
+
+    return articles.map(article => ({
+      id: article.id,
+      title: article.titre,
+      excerpt: article.contenu.substring(0, 150) + '...',
+      author: article.auteur,
+      date: article.created_at ? new Date(article.created_at).toLocaleDateString() : 'Recent',
+      category: article.categorie,
+      image: getImageUrl(article.image_url)
+    }));
+  },
+
+  getPartners: async (): Promise<Partner[]> => {
+    const partners = await fetchData<ApiPartner[]>('partners.php', []);
+    if (!Array.isArray(partners) || partners.length === 0) return PARTNERS;
+
+    return partners.map((p) => ({
+      id: p.id,
+      name: p.nom,
+      logo: getImageUrl(p.logo_url),
+      description: p.description,
+      type: 'Corporate'
+    }));
+  },
 
   getSettings: () => fetchData<SiteSettings>('settings.php', {
     logoUrl: `${API_BASE_URL}/assets/images/logo1.png`, 
@@ -96,98 +163,10 @@ export const api = {
     socialLinks: { facebook: 'https://facebook.com', twitter: 'https://x.com' }
   }),
 
-  getProjects: async (): Promise<Project[]> => {
-    try {
-      const actions = await fetchData<ApiAction[]>('actions.php', []);
-      // Si l'API retourne un tableau vide ou échoue, on renvoie les PROJETS de test
-      if (!Array.isArray(actions) || actions.length === 0) return PROJECTS;
-      
-      return actions.map(action => ({
-        id: action.id,
-        title: action.titre,
-        category: action.categorie,
-        description: action.description,
-        image: getImageUrl(action.image_url),
-        date: action.date_debut,
-        endDate: action.date_fin,
-        status: action.statut === 'termine' ? 'Completed' : 'Ongoing',
-        goal: 10000, 
-        raised: 0    
-      }));
-    } catch (e) {
-      return PROJECTS;
-    }
-  },
-
-  getBlogPosts: async (): Promise<BlogPost[]> => {
-    try {
-      const articles = await fetchData<ApiArticle[]>('articles.php', []);
-      if (!Array.isArray(articles) || articles.length === 0) return BLOG_POSTS;
-
-      return articles.map(article => ({
-        id: article.id,
-        title: article.titre,
-        excerpt: article.contenu.substring(0, 150) + '...',
-        author: article.auteur,
-        date: article.created_at ? new Date(article.created_at).toLocaleDateString() : 'Recent',
-        category: article.categorie,
-        image: getImageUrl(article.image_url)
-      }));
-    } catch (e) {
-      return BLOG_POSTS;
-    }
-  },
-
-  getPartners: async (): Promise<Partner[]> => {
-    try {
-      const partners = await fetchData<ApiPartner[]>('partners.php', []);
-      if (!Array.isArray(partners) || partners.length === 0) return PARTNERS;
-
-      return partners.map((p) => ({
-        id: p.id,
-        name: p.nom,
-        logo: getImageUrl(p.logo_url),
-        description: p.description,
-        type: 'Corporate' // Type par défaut si non présent en BD
-      }));
-    } catch (e) {
-      return PARTNERS; 
-    }
-  },
-
   getTeam: () => fetchData<TeamMember[]>('team.php', TEAM_MEMBERS),
   getTestimonials: () => fetchData<Testimonial[]>('testimonials.php', TESTIMONIALS),
 
-  // --- AUTHENTIFICATION & UTILISATEURS (POST/PUT) ---
-
-  login: async (loginInput: string, passwordInput: string): Promise<{ success: boolean; user?: ApiUser; error?: string }> => {
-    try {
-        // Code aligné sur votre version fonctionnelle
-        const res = await fetch(`${API_BASE_URL}/login.php`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ login: loginInput, password: passwordInput })
-        });
-        
-        const data = await res.json();
-        
-        if (res.ok) {
-            // Supporte format { user: ... } ou { id: ..., username: ... } direct
-            return { success: true, user: data.user || data };
-        } else {
-            return { success: false, error: data.error || data.message || "Erreur de connexion" };
-        }
-    } catch (err: any) {
-        console.error("Login Error:", err);
-        
-        // Backdoor Admin pour tests si serveur coupé
-        if (loginInput === 'admin@comfort.org' && passwordInput === 'admin') {
-           return { success: true, user: { id: '1', username: 'Admin Test', email: 'admin@comfort.org', role: 'superadmin', created_at: '2025-01-01' } };
-        }
-
-        return { success: false, error: "Impossible de se connecter au serveur. Vérifiez que WAMP/XAMPP est lancé." };
-    }
-  },
+  // --- AUTRES ACTIONS POST ---
 
   register: async (userData: any): Promise<{ success: boolean; error?: string }> => {
     try {
